@@ -1,7 +1,5 @@
 from collections import namedtuple
 from tkinter import *
-from signaldef import *
-
 
 COLUMN_COLOR_LIST = [
     '#8EE5EE',
@@ -70,10 +68,8 @@ class SignalRow:
 
     All attributes of a signal will be displayed in individual column based on the user given Row.
     """
-    row_num = 0
     def __init__(self, master, row, signal_1, signal_2,
                  **kwargs):
-        self.__class__.row_num += 1
         self.row = row
         self.gateway = True
         self.signal_active = False
@@ -218,45 +214,6 @@ class SignalRow:
         self.chkbtn_signal_active.set(bool_value)
 
 
-def create_column_heading_signal_name(master, heading_text, column):
-    """
-    Create the Heading of column to display the name of signal 1 & 2.
-
-    Subheadings will be displayed into individual column by spanning the main column.
-
-    By default signal Name heading will be created on row position 0 & subheadings on row position 1.
-
-    To get the actual signal row, user should start the row from position 2.
-    Args:
-        master = Main tkinter frame
-        heading_text = given name for signal 1 & 2 during method call.
-        column = given column number during method call.
-    """
-    subheadings = ["Minimum", "Maximum", "Unit"]
-    lbl_column_signame = Label(master, text=heading_text, bg=COLUMN_COLOR_LIST[column], font='Helvetica 11 bold')
-    lbl_column_signame.grid(row=0, column=column, columnspan=len(subheadings), sticky=W+E)
-    for index, element in enumerate(subheadings):
-        lbl = Label(master, text=element, bg=COLUMN_COLOR_LIST[column], font='Helvetica 9 bold')
-        lbl.grid(row=1, column=column+index, sticky=W+E)
-
-
-def create_column_heading_signal_widgets(master):
-    """
-    Create the heading of column to display the respective widgets for signal 1 & 2 and also to display the headings of
-    the common widgets, which is applicable for both signal 1 & 2.
-    Args:
-        master = Main tkinter frame
-    """
-    column_headings_sig_widgets = ["Measured Value 1", "User Value 1", "Measured Value 2", "User Value 2",
-                                   "Gateway", "Signal Active"]
-    start_index = 6
-    for col, label in enumerate(column_headings_sig_widgets, start_index):
-        heading_sig_widgets = Label(master, text=label, bg=COLUMN_COLOR_LIST[col], font='Helvetica 11 bold')
-        empty_lbl = Label(master, text="", bg=COLUMN_COLOR_LIST[col], width=24)
-        heading_sig_widgets.grid(row=0, column=col, sticky=W+E)
-        empty_lbl.grid(row=1, column=col)
-
-
 def bg_color_indicator(widget, status):
     if status == "OK":
         widget.config(bg="green")
@@ -265,68 +222,7 @@ def bg_color_indicator(widget, status):
     else:
         widget.config(bg="red")
 
-def get_frame_inputs(frame):
-    inputs = [frame.children[x].get() for x in frame.children if '!validatingentry' in x]
-    #print(inputs)
-    return inputs
 
 
-def update_list():
-    pass
-
-
-if __name__ == '__main__':
-    root = Tk()
-    fr = Frame(master=root)
-    #fr.bind('<Return>', get_frame_inputs)
-
-    fr.grid()
-
-    create_column_heading_signal_name(fr, heading_text="Signal Name 1", column=0)
-    create_column_heading_signal_name(fr, heading_text="Signal Name 2", column=3)
-
-    create_column_heading_signal_widgets(fr)
-
-    row1 = SignalRow(fr, row=2,
-                     signal_1=SignalDefinition(name="Temperature_D", minimum="-40", maximum="165", unit="°C",
-                                               physical=Physical(x1=-40, x2=165, y1=1, y2=26241, bitwidth=16)),
-                     signal_2=SignalDefinition(name="Temperature_K", minimum="233.98", maximum="438.35", unit="Kelvin",
-                                               physical=Physical(x1=-40, x2=165, y1=1, y2=26241, bitwidth=16)))
-
-    row2 = SignalRow(fr, row=4,
-                     signal_1=SignalDefinition(name="Air Pressure_Ps", minimum="0", maximum="600", unit="Pascal",
-                                               physical=Physical(x1=0, x2=600, y1=1, y2=60001, bitwidth=16)),
-                     signal_2=SignalDefinition(name="Air Pressure_lpb", minimum="149.98", maximum="548.35", unit="Pound",
-                                               physical=Physical(x1=0, x2=600, y1=1, y2=60001, bitwidth=16)))
-
-    row3 = SignalRow(fr, row=6,
-                     signal_1=SignalDefinition(name="Temperature_D", minimum="-40", maximum="165", unit="°C",
-                                               physical=spec_conti(minimum="-40", maximum="165", resolution="0.0078125",
-                                                                offset="-40", bitwidth=16)),
-                     signal_2=SignalDefinition(name="Temperature_K", minimum="233.98", maximum="438.35", unit="Kelvin",
-                                               physical=spec_conti(minimum="233.98", maximum="438.35", resolution="0.0078125",
-                                                                   offset="233.98", bitwidth=16)))
-
-    row4 = SignalRow(fr, row=8,
-                     signal_1=SignalDefinition(name="Supply Voltage_16", minimum="0", maximum="40.75", unit="V",
-                                               physical=spec_conti(minimum="0", maximum="4"
-                                                                                        "0.75", resolution="0.009949",
-                                                                offset="0", bitwidth=16)),
-                     signal_2=SignalDefinition(name="Supply Voltage_8", minimum="0", maximum="40.75", unit="V",
-                                               physical=spec_conti(minimum="0", maximum="40.75", resolution="0.16",
-                                                                   offset="0", bitwidth=8)))
-
-    row5 = SignalRow(fr, row=10,
-                     signal_1=SignalDefinition(name="Temperature_Bosch", minimum="-40.15", maximum="130.10", unit="°C",
-                                               physical=Physical(x1=-40.15, x2=130.10, y1=264, y2=1626, bitwidth=12)),
-                     signal_2=SignalDefinition(name="Differential Air Pressure", minimum="-16", maximum="2", unit="KiloPascal",
-                                               physical=Physical(x1=-16, x2=2, y1=193, y2=3896, bitwidth=12)))
-
-    lst = []
-    b_update = Button(root, text="Update", command=row1.get_user_value, state=NORMAL)
-    b_update.grid(sticky='NE', padx=7)
-    print(row2.get_user_value())
-    print(SignalRow.row_num)
-    root.mainloop()
 
 
