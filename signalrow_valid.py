@@ -1,4 +1,5 @@
 from collections import namedtuple
+from signaldef import *
 from tkinter import *
 
 COLUMN_COLOR_LIST = [
@@ -16,7 +17,7 @@ COLUMN_COLOR_LIST = [
     None,
 ]
 
-SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit'])
+SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit', 'validate', 'indicate'])
 
 
 class ValidatingEntry(Entry):
@@ -68,23 +69,30 @@ class SignalRow:
 
     All attributes of a signal will be displayed in individual column based on the user given Row.
     """
-    def __init__(self, master, row, signal_1, signal_2,
+    def __init__(self, master, row, signal1_details, signal2_details,
                  **kwargs):
         self.row = row
         self.gateway = True
         self.signal_active = False
 
         self._create_entry_measured_value(master, initval_sig1="", initval_sig2="")
-        self._create_entry_user_value(master, signal_1, signal_2)
+        self._create_entry_user_value(master, signal1_details.validate, signal1_details.indicate)
+        self._create_entry_user_value(master, signal2_details.validate, signal2_details.indicate)
         self._create_chkbtn_gateway(master)
         self._create_chkbtn_signal_active(master)
 
         self._create_signal_label(master, row=row, column=0,
-                                  signame=signal_1.name, minimum=signal_1.minimum, maximum=signal_1.maximum,
-                                  unit=signal_1.unit)
+                                  signame=signal1_details.name,
+                                  minimum=signal1_details.minimum,
+                                  maximum=signal1_details.maximum,
+                                  unit=signal1_details.unit,
+                                  )
         self._create_signal_label(master, row=row, column=3,
-                                  signame=signal_2.name, minimum=signal_2.minimum, maximum=signal_2.maximum,
-                                  unit=signal_2.unit)
+                                  signame=signal2_details.name,
+                                  minimum=signal2_details.minimum,
+                                  maximum=signal2_details.maximum,
+                                  unit=signal2_details.unit,
+                                  )
 
     def commit(self, dummy=None):
         self.entry_sig1.commit()
@@ -131,7 +139,7 @@ class SignalRow:
         empty_lbl_1.grid(row=self.row+1, column=6)
         empty_lbl_2.grid(row=self.row+1, column=8)
 
-    def _create_entry_user_value(self, master, signal1_details, signal2_details):
+    def _create_entry_user_value(self, master, validate, indicate):
         """
         Creates Entry for the User given value for the signal 1 & 2. Default is set to empty string.
         Args:
@@ -141,10 +149,10 @@ class SignalRow:
         # self.entry_user_value_sig2 = StringVar()
         #self.set_user_value(self.user_value_sig1, self.user_value_sig2)
 
-        validate_sig1 = signal1_details.validate_str_entry
-        validate_sig2 = signal2_details.validate_str_entry
-        self.entry_sig1 = ValidatingEntry(master, validate=validate_sig1, indicate=bg_color_indicator, width=28)
-        self.entry_sig2 = ValidatingEntry(master, validate=validate_sig2, indicate=bg_color_indicator, width=28)
+        #validate_sig1 = signal1_details.validate_str_entry
+        #validate_sig2 = signal2_details.validate_str_entry
+        self.entry_sig1 = ValidatingEntry(master, validate=validate, indicate=indicate, width=28)
+        self.entry_sig2 = ValidatingEntry(master, validate=validate, indicate=indicate, width=28)
         self.entry_sig1.grid(row=self.row,column=7)
         self.entry_sig2.grid(row=self.row,column=9)
         empty_lbl_1 = Label(master, text="", bg=COLUMN_COLOR_LIST[7], width=24)
@@ -223,6 +231,14 @@ def bg_color_indicator(widget, status):
         widget.config(bg="red")
 
 
+def get_signal_details(signal_obj):
+    SignalDetails.name = signal_obj.name
+    SignalDetails.minimum = signal_obj.minimum
+    SignalDetails.maximum = signal_obj.maximum
+    SignalDetails.unit = signal_obj.unit
+    SignalDetails.validate = signal_obj.validate_str_entry
+    SignalDetails.indicate = bg_color_indicator
+    return SignalDetails
 
 
 
