@@ -1,5 +1,3 @@
-from collections import namedtuple
-from signaldef import *
 from tkinter import *
 
 COLUMN_COLOR_LIST = [
@@ -16,8 +14,6 @@ COLUMN_COLOR_LIST = [
     None,
     None,
 ]
-
-SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit', 'validate', 'indicate'])
 
 
 class ValidatingEntry(Entry):
@@ -231,14 +227,6 @@ def bg_color_indicator(widget, status):
         widget.config(bg="red")
 
 
-def get_signal_details(signal_obj):
-    SignalDetails.name = signal_obj.name
-    SignalDetails.minimum = signal_obj.minimum
-    SignalDetails.maximum = signal_obj.maximum
-    SignalDetails.unit = signal_obj.unit
-    SignalDetails.validate = signal_obj.validate_str_entry
-    SignalDetails.indicate = bg_color_indicator
-    return SignalDetails
 
 
 

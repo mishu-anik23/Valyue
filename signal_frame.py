@@ -1,28 +1,23 @@
-from signalrow_valid import *
 from signaldef import *
 
 
-sd1 = get_signal_details(SignalDefinition(name="Temperature_D", minimum="-40", maximum="165", unit="°C",
-                                          physical=Physical(x1=-40, x2=165, y1=1, y2=26241, bitwidth=16)))
-sd2 = get_signal_details(SignalDefinition(name="Temperature_K", minimum="233.98", maximum="438.35",
+sig_obj1 = SignalDefinition(name="Temperature_D", minimum="-40", maximum="165", unit="°C",
+                                          physical=Physical(x1=-40, x2=165, y1=1, y2=26241, bitwidth=16))
+sig_obj2 = SignalDefinition(name="Temperature_K", minimum="233.98", maximum="438.35",
                                           unit="Kelvin",
-                                          physical=Physical(x1=-40, x2=165, y1=1, y2=26241, bitwidth=16)))
-
-sd3 = get_signal_details(SignalDefinition(name="Air Pressure_Ps", minimum="0", maximum="600", unit="Pascal",
-                                                   physical=Physical(x1=0, x2=600, y1=1, y2=60001, bitwidth=16)))
-
-sd4 = get_signal_details(SignalDefinition(name="Air Pressure_lpb", minimum="149.98", maximum="548.35",
+                                          physical=Physical(x1=-40, x2=165, y1=1, y2=26241, bitwidth=16))
+sig_obj3 = SignalDefinition(name="Air Pressure_Ps", minimum="0", maximum="600", unit="Pascal",
+                                                   physical=Physical(x1=0, x2=600, y1=1, y2=60001, bitwidth=16))
+sig_obj4 = SignalDefinition(name="Air Pressure_lpb", minimum="149.98", maximum="548.35",
                                                    unit="Pound",
-                                                   physical=Physical(x1=0, x2=600, y1=1, y2=60001, bitwidth=16)))
-
-sd5 = get_signal_details(SignalDefinition(name="Temperature_Bosch", minimum="-40.15", maximum="130.10",
+                                                   physical=Physical(x1=0, x2=600, y1=1, y2=60001, bitwidth=16))
+sig_obj5 = SignalDefinition(name="Temperature_Bosch", minimum="-40.15", maximum="130.10",
                                                    unit="°C",
                                                    physical=Physical(x1=-40.15, x2=130.10, y1=264, y2=1626,
-                                                                     bitwidth=12)))
-
-sd6 = get_signal_details(SignalDefinition(name="Differential Air Pressure", minimum="-16", maximum="2",
+                                                                     bitwidth=12))
+sig_obj6 = SignalDefinition(name="Differential Air Pressure", minimum="-16", maximum="2",
                                                    unit="KiloPascal",
-                                                   physical=Physical(x1=-16, x2=2, y1=193, y2=3896, bitwidth=12)))
+                                                   physical=Physical(x1=-16, x2=2, y1=193, y2=3896, bitwidth=12))
 
 
 class SignalFrame(Frame):
@@ -31,14 +26,19 @@ class SignalFrame(Frame):
 
         self.sigrows = []
 
-
-        row = SignalRow(self, row=2, signal1_details=sd1, signal2_details=sd2)
+        row = SignalRow(self, row=2,
+                        signal1_details=sig_obj1.get_signal_details(),
+                        signal2_details=sig_obj2.get_signal_details())
         self.sigrows.append(row)
 
-        row = SignalRow(self, row=4, signal1_details=sd3, signal2_details=sd4)
+        row = SignalRow(self, row=4,
+                        signal1_details=sig_obj3.get_signal_details(),
+                        signal2_details=sig_obj4.get_signal_details())
         self.sigrows.append(row)
 
-        row = SignalRow(self, row=6, signal1_details=sd5, signal2_details=sd6)
+        row = SignalRow(self, row=6,
+                        signal1_details=sig_obj5.get_signal_details(),
+                        signal2_details=sig_obj6.get_signal_details())
         self.sigrows.append(row)
 
         self._create_button_widget()

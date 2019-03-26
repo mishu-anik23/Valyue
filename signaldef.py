@@ -4,7 +4,11 @@ Functions and classes to define the SENT signal according to SAE J2716 specifica
 
 import numbers
 from math import floor
+from collections import namedtuple
+from signalrow_valid import *
 
+
+SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit', 'validate', 'indicate'])
 
 def intorfloat(x):
     """Convert string input to int if possible, otherwise try converting to float
@@ -187,6 +191,16 @@ class SignalDefinition:
         else:
             raw_val, status = 0, "ERROR"
         return raw_val, status
+
+    def get_signal_details(self):
+        obj_sig_detail = SignalDetails(self.name,
+                                       self.minimum,
+                                       self.maximum,
+                                       self.unit,
+                                       self.validate_str_entry,
+                                       bg_color_indicator,
+                                       )
+        return obj_sig_detail
 
 
 
