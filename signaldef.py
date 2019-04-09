@@ -36,14 +36,14 @@ def calc_y2(x1, x2, resolution):
     return y1, y2
 
 
-def spec_conti(minimum, maximum, resolution, bitwidth, offset=None, context=None):
+def spec_conti(minimum, maximum, resolution, bitwidth, offset=None):
     offset_y_low = 1
     if offset is not None:
         offset = offset_y_low
     range_diff = intorfloat(maximum) - intorfloat(minimum)
     offset_y_high = (range_diff / float(resolution)) + offset
 
-    phy_obj = Physical(x1=minimum, x2=maximum, y1=offset_y_low, y2=offset_y_high, bitwidth=bitwidth, context=context)
+    phy_obj = Physical(x1=minimum, x2=maximum, y1=offset_y_low, y2=offset_y_high, bitwidth=bitwidth)
     return phy_obj
 
 
@@ -63,25 +63,27 @@ def create_signal(xml_signaldefinition, context=None):
 
 class SignalEncoding:
 
-    def __init__(self, bitsize=None, context=None):
+    def __init__(self, bitsize=None):
         self.bitsize = int(bitsize)
 
     def __repr__(self):
         template = "SignalEncoding(bitsize={0.bitsize})"
         return template.format(self)
 
+    def __eq__(self, other):
+        return self.bitsize == other.bitsize
+
     @classmethod
-    def from_xml(cls, xml_fragment, context=None):
+    def from_xml(cls, xml_fragment):
         """Create Encoding object from an XML fragment
         :param context:
         """
-        context = context or {}
         if isinstance(xml_fragment, str):
             xml_fragment = ET.fromstring(xml_fragment)
         encoding = xml_fragment.find('encoding')
         if encoding is None:
             raise ValueError("XML fragment does not contain an <encoding> tag")
-        return cls(encoding.attrib['bitsize'], context=context)
+        return cls(encoding.attrib['bitsize'])
 
 
 class Physical:
@@ -89,7 +91,7 @@ class Physical:
     Physical represents the translation between raw signal values measured in sensor domain and
     physical units given in the Tkinter Entry widget by user.
     """
-    def __init__(self, x1, x2, y1, y2, bitwidth, unit=None, context=None):
+    def __init__(self, x1, x2, y1, y2, bitwidth, unit=None, format=None):
         try:
             self.x1 = intorfloat(x1)
             self.x2 = intorfloat(x2)
@@ -97,10 +99,11 @@ class Physical:
             raise ValueError("Missing or non-numeric input for x1 or x2")
         # if unit is None:
         #     raise ValueError("Parameter unit must be given")
-        self.y1 = y1
-        self.y2 = y2
+        self.y1 = int(y1)
+        self.y2 = int(y2)
         self.bitwidth = bitwidth
         self.unit = unit
+        self.format = format
         self.low_clamp = 1
         self.high_clamp = high_clamp(bitwidth)
         self.max_raw = (1 << self.bitwidth) - 1
@@ -109,26 +112,32 @@ class Physical:
         template = "Physical(x1={0.x1}, x2={0.x2}, y1={0.y1}, y2={0.y2}, bitwidth={0.bitwidth!r})"
         return template.format(self)
 
+    def __eq__(self, other):
+        attrs = ['x1', 'x2', 'y1', 'y2', 'bitwidth', 'unit', 'format']
+        return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
+
     @classmethod
-    def from_xml(cls, xml_fragment, bitwidth, context=None):
+    def from_xml(cls, xml_fragment, bitwidth):
         if isinstance(xml_fragment, str):
             xml_fragment = ET.fromstring(xml_fragment)
         physical_sae = xml_fragment.find('physical_sae')
         physical = xml_fragment.find('physical')
 
-        if not physical_sae and not physical:
+        if physical_sae is None and physical is None:
             raise ValueError("XML fragment does not contain a <physical_sae> or <physical> tag")
-        elif physical_sae and physical:
+        elif physical_sae is not None and physical is not None:
             raise ValueError("XML fragment contains both <physical_sae> and <physical> tag")
         else:
-            if physical:
-                phy_obj = Physical(**physical_sae.attrib, context=context)
+            if physical_sae is not None:
+                phy_obj = Physical(**physical_sae.attrib, bitwidth=bitwidth)
             else:
                 minimum = intorfloat(physical.attrib['minimum'])
                 maximum = intorfloat(physical.attrib['maximum'])
                 resolution = 1 / (intorfloat(physical.attrib['factor']))
                 offset = intorfloat(physical.attrib['offset'])
-                phy_obj = spec_conti(minimum, maximum, resolution, bitwidth, offset, context)
+                phy_obj = spec_conti(minimum, maximum, resolution, bitwidth, offset)
+                phy_obj.format = physical.attrib['format']
+                phy_obj.unit = physical.attrib['unit']
         return phy_obj
 
     def raw2phys(self, raw_value):
@@ -199,22 +208,27 @@ class SignalDefinition:
     The SignalDefinition class stores all the information contained in a <signaldefinition> tag
     """
 
-    def __init__(self, name, alt_name, minimum, maximum, unit, physical, encoding,
+    def __init__(self, name, alt_name, minimum, maximum, unit, physical, encoding=None,
                  context=None):
         self.name = name
         self.alt_name = alt_name
         self.minimum = minimum
         self.maximum = maximum
         self.unit = unit
-        self.encoding = encoding
         self.physical = physical
+        self.encoding = encoding
+
 
     def __repr__(self):
         return ('SignalDefinition(name={!r}, alt_name={!r}, '
                 'minimum={!r}, maximum={!r}, unit={!r},'
-                'encoding={}, physical={})'.format(self.name, self.alt_name,
+                'physical={}, encoding={})'.format(self.name, self.alt_name,
                                                    self.minimum, self.maximum, self.unit,
                                                    self.physical, self.encoding))
+
+    def __eq__(self, other):
+        attrs = ['name', 'alt_name', 'minimum', 'maximum', 'unit', 'encoding', 'physical']
+        return all(getattr(self, a) == getattr(other, a) for a in attrs)
 
     @classmethod
     def from_xml(cls, xml_fragment, context=None):
@@ -229,18 +243,9 @@ class SignalDefinition:
             xml_fragment = ET.fromstring(xml_fragment)
         if xml_fragment.tag != 'signaldefinition':
             raise ValueError("XML fragment is not a <signaldefinition>")
-        encoding = SignalEncoding.from_xml(xml_fragment, context=context)
-        # try:
-        #     physical = Physical.from_xml(xml_fragment, context=context)
-        # except ValueError:
-        #     # bitsize//4 gives number of hex digits; add 2 bits to allow for half-nibbles: 10bits + 2 // 4 == 3 digits
-        #     nibble_count = (encoding.bitsize + 2) // 4
-        #     format_string = '0{}x'.format(nibble_count)
-        #     physical = Physical(minimum=0, maximum=maxvalue(encoding.bitsize),
-        #                         offset=0, factor=1, unit='', format=format_string,
-        #                         context=context)
 
-        physical = Physical.from_xml(xml_fragment, encoding.bitsize, context=context)
+        encoding = SignalEncoding.from_xml(xml_fragment)
+        physical = Physical.from_xml(xml_fragment, encoding.bitsize)
         # print("####", physical)
         return cls(
             name=xml_fragment.attrib['name'],

@@ -162,8 +162,8 @@ grammar {
     element physical_sae {
         attribute x1_phy { xsd:float },
         attribute x2_phy { xsd:float },
-        attribute y1_raw { xsd:float },
-        attribute y2_raw { xsd:float },
+        attribute y1_raw { xsd:int },
+        attribute y2_raw { xsd:int },
         attribute unit { xsd:string },
         attribute format { xsd:string },
         ErrorCodes?
