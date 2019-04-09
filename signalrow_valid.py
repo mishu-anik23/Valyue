@@ -1,3 +1,4 @@
+from enum import Enum
 from tkinter import *
 
 COLUMN_COLOR_LIST = [
@@ -14,6 +15,18 @@ COLUMN_COLOR_LIST = [
     None,
     None,
 ]
+
+
+class Status(Enum):
+    OK = '#32CD32'
+    WARNING = '#FFFF00'
+    ERROR = '#FF3030'
+
+
+class EntryType(Enum):
+    RAW = 1
+    PHYSICAL = 2
+    INVALID = 3
 
 
 class ValidatingEntry(Entry):
@@ -219,12 +232,12 @@ class SignalRow:
 
 
 def bg_color_indicator(widget, status):
-    if status == "OK":
-        widget.config(bg="green")
-    elif status == "WARNING":
-        widget.config(bg="yellow")
+    if status == Status.OK.name:
+        widget.config(bg=Status.OK.value)
+    elif status == Status.WARNING.name:
+        widget.config(bg=Status.WARNING.value)
     else:
-        widget.config(bg="red")
+        widget.config(bg=Status.ERROR.value)
 
 
 

@@ -179,9 +179,9 @@ class Physical:
 
     def validate_raw_value(self, raw_val):
         if raw_val >= self.max_raw:
-            ret_val, status = 0, "ERROR"
+            ret_val, status = 0, Status.ERROR.name
         else:
-            ret_val, status = raw_val, "WARNING"
+            ret_val, status = raw_val, Status.WARNING.name
         return ret_val, status
 
     def validate_phy_value(self, phy_value):
@@ -192,14 +192,14 @@ class Physical:
         converted_raw_value = self.phy2raw(phy_value)
 
         if self.x1 <= phy_value <= self.x2:
-            signal_quality = "OK"
+            signal_quality = Status.OK.name
         elif converted_raw_value == self.y1 or converted_raw_value == self.y2:
-            signal_quality = "WARNING"
+            signal_quality = Status.WARNING.name
         elif (start_lower_range <= converted_raw_value <= end_lower_range or
               start_upper_range <= converted_raw_value <= end_upper_range):
-            signal_quality = "WARNING"
+            signal_quality = Status.WARNING.name
         else:
-            signal_quality = "ERROR"
+            signal_quality = Status.ERROR.name
         return converted_raw_value, signal_quality
 
 
@@ -208,7 +208,7 @@ class SignalDefinition:
     The SignalDefinition class stores all the information contained in a <signaldefinition> tag
     """
 
-    def __init__(self, name, alt_name, minimum, maximum, unit, physical, encoding=None,
+    def __init__(self, name, minimum, maximum, unit, physical, alt_name=None, encoding=None,
                  context=None):
         self.name = name
         self.alt_name = alt_name
@@ -263,30 +263,30 @@ class SignalDefinition:
         try:
             if entry_input[:2] == '0x':
                 base = 16
-                entry_type = "RAW"
+                entry_type = EntryType.RAW.name
             elif entry_input[:2] == '0b':
                 base = 2
-                entry_type = "RAW"
+                entry_type = EntryType.RAW.name
             else:
                 base = 10
-                entry_type = "PHYSICAL"
+                entry_type = EntryType.PHYSICAL.name
             converted_value = int(entry_input, base)
         except ValueError:
             try:
                 converted_value = float(entry_input)
-                entry_type = "PHYSICAL"
+                entry_type = EntryType.PHYSICAL.name
             except ValueError:
-                return 0, "INVALID"
+                return 0, EntryType.INVALID.name
         return converted_value, entry_type
 
     def validate_str_entry(self, str_entry):
         value, typ = self.str2number(str_entry)
-        if typ == "RAW":
+        if typ == EntryType.RAW.name:
             raw_val, status = self.physical.validate_raw_value(value)
-        elif typ == "PHYSICAL":
+        elif typ == EntryType.PHYSICAL.name:
             raw_val, status = self.physical.validate_phy_value(value)
         else:
-            raw_val, status = 0, "ERROR"
+            raw_val, status = 0, Status.ERROR.name
         return raw_val, status
 
     def get_signal_details(self):
