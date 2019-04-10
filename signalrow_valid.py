@@ -37,7 +37,7 @@ class ValidatingEntry(Entry):
     indicate(status, widget) -> None
     """
 
-    def __init__(self, master, validate, indicate, default, format, **kwargs):
+    def __init__(self, master, validate, indicate, **kwargs):
         """
         Initialisation of entry attributes
         + setting up trace for callback
@@ -45,10 +45,8 @@ class ValidatingEntry(Entry):
         super().__init__(master, **kwargs)
         self.indicate = indicate
         self.validate = validate
-        #self._value = "{0:.{1}f}".format(default, format)
-        self._value = '{}'.format(default)
+        self._value = ""
         self._variable = StringVar()
-        self._variable.set(self._value)  # per default set the value from signal configuration
         self._variable.trace('w', self.callback)
         self.config(textvariable=self._variable)
         self.bind('<Return>', self.commit)
@@ -72,6 +70,11 @@ class ValidatingEntry(Entry):
     def get_value(self):
         return self._value
 
+    def set_value(self, value, format):
+        # ToDO catch exception if value is not float representation
+        self._variable.set("{:{}}".format(float(value), format))
+
+
 
 class SignalRow:
     """
@@ -87,15 +90,8 @@ class SignalRow:
 
         self._create_entry_measured_value(master, initval_sig1="", initval_sig2="")
         self._create_entry_user_value(master,
-                                      signal1_details.validate,
-                                      signal1_details.indicate,
-                                      signal1_details.default,
-                                      signal1_details.format)
-        self._create_entry_user_value(master,
-                                      signal2_details.validate,
-                                      signal2_details.indicate,
-                                      signal2_details.default,
-                                      signal2_details.format)
+                                      signal1_details,
+                                      signal2_details)
         self._create_chkbtn_gateway(master)
         self._create_chkbtn_signal_active(master)
 
@@ -157,18 +153,20 @@ class SignalRow:
         empty_lbl_1.grid(row=self.row+1, column=6)
         empty_lbl_2.grid(row=self.row+1, column=8)
 
-    def _create_entry_user_value(self, master, validate, indicate, default, format):
+    def _create_entry_user_value(self, master, sig1, sig2):
         """
         Creates Entry for the User given value for the signal 1 & 2. Default is set to empty string.
         Args:
             master =  Main tkinter frame
         """
-        self.entry_sig1 = ValidatingEntry(master, validate=validate, indicate=indicate, default=default, format=format,
+        self.entry_sig1 = ValidatingEntry(master, validate=sig1.validate, indicate=sig1.indicate,
                                           width=28)
-        self.entry_sig2 = ValidatingEntry(master, validate=validate, indicate=indicate, default=default, format=format,
+        self.entry_sig2 = ValidatingEntry(master, validate=sig2.validate, indicate=sig2.indicate,
                                           width=28)
         self.entry_sig1.grid(row=self.row,column=7)
         self.entry_sig2.grid(row=self.row,column=9)
+        self.entry_sig1.set_value(sig1.default, sig1.format)
+        self.entry_sig2.set_value(sig2.default, sig2.format)
         empty_lbl_1 = Label(master, text="", bg=COLUMN_COLOR_LIST[7], width=24)
         empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[9], width=24)
         empty_lbl_1.grid(row=self.row+1, column=7)

@@ -3,10 +3,12 @@ from signaldef import *
 sig_obj1 = SignalDefinition(name="Temperature_Bosch", minimum="-40.15", maximum="130.10",
                                                    unit="°C", default="25.99",
                                                    physical=Physical(x1=-40.15, x2=130.10, y1=264, y2=1626,
-                                                                     bitwidth=12, format=3))
+                                                                     bitwidth=12, format='.3f'))
 sig_obj2 = SignalDefinition(name="Differential Air Pressure", minimum="-16", maximum="2",
-                                                   unit="KiloPascal", default="-7.99876543",
-                                                   physical=Physical(x1=-16, x2=2, y1=193, y2=3896, bitwidth=12, format=2))
+                                                   unit="KiloPascal", default="-17.99876543",
+                                                   physical=Physical(x1=-16, x2=2, y1=193, y2=3896, bitwidth=12, format='.2f'))
+
+
 
 
 class SignalFrame(Frame):

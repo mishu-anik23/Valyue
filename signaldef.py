@@ -58,7 +58,7 @@ def create_signal(xml_signaldefinition, context=None):
     """Return a SignalDefinition object for the XML signal definition with frame control set
     """
     signal = SignalDefinition.from_xml(xml_signaldefinition, context=context)
-    print("***", signal)
+    # print("***", signal)
     return signal
 
 
@@ -223,7 +223,7 @@ class SignalDefinition:
     """
 
     def __init__(self, name, minimum, maximum, unit, physical, alt_name=None, encoding=None,
-                 default=None, format=None, context=None):
+                 default=None, context=None):
         self.name = name
         self.alt_name = alt_name
         self.minimum = minimum
@@ -232,8 +232,6 @@ class SignalDefinition:
         self.physical = physical
         self.encoding = encoding
         self.default = default
-        self.format = format
-
 
     def __repr__(self):
         return ('SignalDefinition(name={!r}, alt_name={!r}, '
@@ -243,8 +241,12 @@ class SignalDefinition:
                                                                   self.encoding, self.physical, self.default))
 
     def __eq__(self, other):
-        attrs = ['name', 'alt_name', 'minimum', 'maximum', 'unit', 'encoding', 'physical', 'default', 'format']
+        attrs = ['name', 'alt_name', 'minimum', 'maximum', 'unit', 'encoding', 'physical', 'default']
         return all(getattr(self, a) == getattr(other, a) for a in attrs)
+
+    @property
+    def display_format(self):
+        return self.physical.format
 
     @classmethod
     def from_xml(cls, xml_fragment, context=None):
@@ -272,7 +274,6 @@ class SignalDefinition:
             encoding=encoding,
             physical=physical,
             default=get_default(xml_fragment),
-            format=physical.format,
             context=context,
         )
 
@@ -314,7 +315,7 @@ class SignalDefinition:
                                        self.validate_str_entry,
                                        bg_color_indicator,
                                        self.default,
-                                       self.format)
+                                       self.display_format)
         return obj_sig_detail
 
 
