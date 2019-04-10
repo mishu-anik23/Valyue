@@ -9,7 +9,8 @@ from collections import namedtuple
 from signalrow_valid import *
 
 
-SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit', 'validate', 'indicate'])
+SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit',
+                                             'validate', 'indicate', 'default', 'format'])
 
 def intorfloat(x):
     """Convert string input to int if possible, otherwise try converting to float
@@ -59,6 +60,18 @@ def create_signal(xml_signaldefinition, context=None):
     signal = SignalDefinition.from_xml(xml_signaldefinition, context=context)
     print("***", signal)
     return signal
+
+
+def get_default(xml_signaldefinition):
+    """
+    Get the value from the xml <default> tag
+    :return signal default value (as a number), or None if the tag does not exist
+    """
+    default = xml_signaldefinition.find('default')
+    try:
+        return intorfloat(default.text)
+    except AttributeError:
+        return None
 
 
 class SignalEncoding:
@@ -115,6 +128,7 @@ class Physical:
     def __eq__(self, other):
         attrs = ['x1', 'x2', 'y1', 'y2', 'bitwidth', 'unit', 'format']
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
+
 
     @classmethod
     def from_xml(cls, xml_fragment, bitwidth):
@@ -209,7 +223,7 @@ class SignalDefinition:
     """
 
     def __init__(self, name, minimum, maximum, unit, physical, alt_name=None, encoding=None,
-                 context=None):
+                 default=None, format=None, context=None):
         self.name = name
         self.alt_name = alt_name
         self.minimum = minimum
@@ -217,17 +231,19 @@ class SignalDefinition:
         self.unit = unit
         self.physical = physical
         self.encoding = encoding
+        self.default = default
+        self.format = format
 
 
     def __repr__(self):
         return ('SignalDefinition(name={!r}, alt_name={!r}, '
                 'minimum={!r}, maximum={!r}, unit={!r},'
-                'physical={}, encoding={})'.format(self.name, self.alt_name,
-                                                   self.minimum, self.maximum, self.unit,
-                                                   self.physical, self.encoding))
+                ' encoding={}), physical={}, default={!r}'.format(self.name, self.alt_name,
+                                                                  self.minimum, self.maximum, self.unit,
+                                                                  self.encoding, self.physical, self.default))
 
     def __eq__(self, other):
-        attrs = ['name', 'alt_name', 'minimum', 'maximum', 'unit', 'encoding', 'physical']
+        attrs = ['name', 'alt_name', 'minimum', 'maximum', 'unit', 'encoding', 'physical', 'default', 'format']
         return all(getattr(self, a) == getattr(other, a) for a in attrs)
 
     @classmethod
@@ -253,9 +269,10 @@ class SignalDefinition:
             minimum=str(physical.x1),
             maximum=str(physical.x2),
             unit=str(physical.unit),
-            physical=physical,
             encoding=encoding,
-            # default=get_default(xml_fragment),
+            physical=physical,
+            default=get_default(xml_fragment),
+            format=physical.format,
             context=context,
         )
 
@@ -296,7 +313,8 @@ class SignalDefinition:
                                        self.unit,
                                        self.validate_str_entry,
                                        bg_color_indicator,
-                                       )
+                                       self.default,
+                                       self.format)
         return obj_sig_detail
 
 
