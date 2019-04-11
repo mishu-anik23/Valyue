@@ -1,6 +1,7 @@
 import os
 import xml.etree.cElementTree as ET
 from signaldef import *
+from parsexml import *
 
 
 def get_version(xml_root):
@@ -46,6 +47,21 @@ def parse_bus(xml_bustree, context):
     return signals, mode
 
 
+def get_sig_by_fc(sigconfdct, fc):
+    """Retrieve all signals that match a given framecounter.
+
+    :param fc: frame counter to look for
+    :return: List of Signal objects that match the frame counter.
+    """
+    multiplex_signals = sigconfdct['multiplex']
+    signals = [signal
+               for signal in multiplex_signals
+               if signal.frame_number == fc
+               ]
+    return signals
+
+
+
 def read_sigdef(xml_filename):
     """
     Read signal configuration from signaldefinition.xml file
@@ -71,4 +87,11 @@ def read_sigdef(xml_filename):
 if __name__ == '__main__':
     xml_file_path = os.path.join(os.getcwd(), "signaldefinition.xml")
     sig_conf = read_sigdef(xml_file_path)
-    print("vhjgghkgkl", sig_conf)
+    frames = []
+    for fc in range(16):
+        frame = get_sig_by_fc(sig_conf, fc)
+        if frame:
+            frames.append(frame)
+            #print("***", frame)
+    print(frames)
+    print(len(frames))

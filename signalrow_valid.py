@@ -72,7 +72,10 @@ class ValidatingEntry(Entry):
 
     def set_value(self, value, format):
         # ToDO catch exception if value is not float representation
-        self._variable.set("{:{}}".format(float(value), format))
+        if format.startswith('.'):
+            self._variable.set("{:{}}".format(float(value), format))
+        else:
+            self._variable.set("{:{}}".format(int(value), format))
 
 
 
@@ -82,35 +85,37 @@ class SignalRow:
 
     All attributes of a signal will be displayed in individual column based on the user given Row.
     """
-    def __init__(self, master, row, signal1_details, signal2_details,
+    def __init__(self, master, row, signal_details,
                  **kwargs):
+        # TODO: signal_details contain FC as well
         self.row = row
         self.gateway = True
         self.signal_active = False
+        (self.signal1_details, self.signal2_details) = signal_details
 
-        self._create_entry_measured_value(master, initval_sig1="", initval_sig2="")
-        self._create_entry_user_value(master,
-                                      signal1_details,
-                                      signal2_details)
+        self._create_entry_measured_value(master, initval_sig1='', initval_sig2='')
+        self._create_entry_user_value(master)
         self._create_chkbtn_gateway(master)
         self._create_chkbtn_signal_active(master)
 
         self._create_signal_label(master, row=row, column=0,
-                                  signame=signal1_details.name,
-                                  minimum=signal1_details.minimum,
-                                  maximum=signal1_details.maximum,
-                                  unit=signal1_details.unit,
+                                  signame=self.signal1_details.name,
+                                  minimum=self.signal1_details.minimum,
+                                  maximum=self.signal1_details.maximum,
+                                  unit=self.signal1_details.unit,
                                   )
-        self._create_signal_label(master, row=row, column=3,
-                                  signame=signal2_details.name,
-                                  minimum=signal2_details.minimum,
-                                  maximum=signal2_details.maximum,
-                                  unit=signal2_details.unit,
-                                  )
+        if self.signal2_details is not None:
+            self._create_signal_label(master, row=row, column=3,
+                                      signame=self.signal2_details.name,
+                                      minimum=self.signal2_details.minimum,
+                                      maximum=self.signal2_details.maximum,
+                                      unit=self.signal2_details.unit,
+                                      )
 
     def commit(self, dummy=None):
         self.entry_sig1.commit()
-        self.entry_sig2.commit()
+        if self.signal2_details is not None:
+            self.entry_sig2.commit()
 
     def _create_signal_label(self, master, row, column, signame, minimum, maximum, unit):
         """
@@ -153,20 +158,23 @@ class SignalRow:
         empty_lbl_1.grid(row=self.row+1, column=6)
         empty_lbl_2.grid(row=self.row+1, column=8)
 
-    def _create_entry_user_value(self, master, sig1, sig2):
+
+    def _create_entry_user_value(self, master):
         """
         Creates Entry for the User given value for the signal 1 & 2. Default is set to empty string.
         Args:
             master =  Main tkinter frame
         """
-        self.entry_sig1 = ValidatingEntry(master, validate=sig1.validate, indicate=sig1.indicate,
-                                          width=28)
-        self.entry_sig2 = ValidatingEntry(master, validate=sig2.validate, indicate=sig2.indicate,
-                                          width=28)
+        self.entry_sig1 = ValidatingEntry(master, validate=self.signal1_details.validate,
+                                          indicate=self.signal1_details.indicate, width=28)
         self.entry_sig1.grid(row=self.row,column=7)
-        self.entry_sig2.grid(row=self.row,column=9)
-        self.entry_sig1.set_value(sig1.default, sig1.format)
-        self.entry_sig2.set_value(sig2.default, sig2.format)
+        self.entry_sig1.set_value(self.signal1_details.default, self.signal1_details.format)
+        if self.signal2_details is not None:
+            self.entry_sig2 = ValidatingEntry(master, validate=self.signal2_details.validate,
+                                              indicate=self.signal2_details.indicate, width=28)
+            self.entry_sig2.grid(row=self.row,column=9)
+
+            self.entry_sig2.set_value(self.signal2_details.default, self.signal2_details.format)
         empty_lbl_1 = Label(master, text="", bg=COLUMN_COLOR_LIST[7], width=24)
         empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[9], width=24)
         empty_lbl_1.grid(row=self.row+1, column=7)
