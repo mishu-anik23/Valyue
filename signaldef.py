@@ -6,6 +6,8 @@ import numbers
 import xml.etree.ElementTree as ET
 from math import floor
 from collections import namedtuple
+from xml.etree import cElementTree as ET
+
 from signalrow_valid import *
 
 
@@ -120,6 +122,7 @@ class Physical:
         self.low_clamp = 1
         self.high_clamp = high_clamp(bitwidth)
         self.max_raw = (1 << self.bitwidth) - 1
+        self.reserved_values = {}
 
     def __repr__(self):
         template = "Physical(x1={0.x1}, x2={0.x2}, y1={0.y1}, y2={0.y2}, bitwidth={0.bitwidth!r})"
@@ -128,7 +131,6 @@ class Physical:
     def __eq__(self, other):
         attrs = ['x1', 'x2', 'y1', 'y2', 'bitwidth', 'unit', 'format']
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
-
 
     @classmethod
     def from_xml(cls, xml_fragment, bitwidth):
@@ -144,8 +146,12 @@ class Physical:
             raise ValueError("XML fragment contains both <physical_sae> and <physical> tag")
         else:
             if physical_sae is not None:
-                phy_obj = Physical(**physical_sae.attrib, bitwidth=bitwidth)
+                errorcodes_xml = physical_sae.find('errorcodes')
+                errorcodes = read_errorcodes(errorcodes_xml)
+                phy_obj = Physical(**physical_sae.attrib, bitwidth=bitwidth, errorcodes=errorcodes)
             else:
+                errorcodes_xml = physical.find('errorcodes')
+                errorcodes = read_errorcodes(errorcodes_xml)
                 minimum = intorfloat(physical.attrib['minimum'])
                 maximum = intorfloat(physical.attrib['maximum'])
                 resolution = 1 / (intorfloat(physical.attrib['factor']))
@@ -153,6 +159,7 @@ class Physical:
                 phy_obj = spec_conti(minimum, maximum, resolution, bitwidth, offset)
                 phy_obj.format = physical.attrib['format']
                 phy_obj.unit = physical.attrib['unit']
+                phy_obj.set_reserved_values(errorcodes)
         return phy_obj
 
     def raw2phys(self, raw_value):
@@ -179,6 +186,12 @@ class Physical:
         elif raw_val >= self.high_clamp:
             raw_val = self.high_clamp
         return raw_val
+
+    def set_reserved_values(self, xml_fragment_errcode):
+        for errcode in xml_fragment_errcode:
+            raw_value = int(errcode.attrib['hexvalue'], 16)
+            self.reserved_values[raw_value] = errcode.attrib['desc']
+
 
     def reserved_value(self, raw_value):
         upper_limit = self.max_raw + 1
@@ -327,4 +340,13 @@ class SignalDefinition:
         return obj_sig_detail
 
 
-
+def read_errorcodes(errorcodes_xml):
+    if not errorcodes_xml:
+        return {}
+    if isinstance(errorcodes_xml, str):
+        errorcodes_xml = ET.fromstring(errorcodes_xml)
+    reserved_values = {}
+    for errcode in errorcodes_xml:
+        raw_value = int(errcode.attrib['hexvalue'], 16)
+        reserved_values[raw_value] = errcode.attrib['desc']
+    return reserved_values
