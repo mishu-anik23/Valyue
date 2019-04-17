@@ -12,7 +12,7 @@ from signalrow_valid import *
 
 
 SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit',
-                                             'validate', 'indicate', 'default', 'format', 'frame'])
+                                             'validate', 'indicate', 'default', 'format', 'frame', 'bitsize'])
 
 def intorfloat(x):
     """Convert string input to int if possible, otherwise try converting to float
@@ -138,6 +138,52 @@ class SignalEncoding:
         return cls(encoding.attrib['bitsize'])
 
 
+class BitField:
+    def __init__(self, bitwidth):
+        self.bitwidth = int(bitwidth)
+        self.max_raw = (1 << self.bitwidth) - 1
+        self.x1 = 0
+        self.x2 = self.max_raw
+        self.y1 = 0
+        self.y2 = self.max_raw
+        self.unit = ""
+        self.format = "d"
+        self.errorcodes = {}
+
+    def __repr__(self):
+        template = "BitField(bitwidth={0.bitwidth!r})"
+        return template.format(self)
+
+    def __eq__(self, other):
+        return self.bitwidth == other.bitwidth
+
+    @classmethod
+    def from_xml(cls, xml_fragment):
+        if isinstance(xml_fragment, str):
+            xml_fragment = ET.fromstring(xml_fragment)
+        # bitfield = xml_fragment.find('isbitfield')
+        # if bitfield is not None:
+        encoding = xml_fragment.find('encoding')
+        bitsize = encoding.attrib['bitsize']
+        return cls(bitsize)
+
+    def raw2phys(self, raw_value):
+        return raw_value
+
+    def phy2raw(self, phys_value):
+        return phys_value
+
+    def validate_raw_value(self, raw_val):
+        if raw_val > self.max_raw:
+            ret_val, status = 0, Status.ERROR.name
+        else:
+            ret_val, status = raw_val, Status.OK.name
+        return ret_val, status
+
+    def validate_phy_value(self, phy_value):
+        return phy_value, Status.OK.name
+
+
 class Physical:
     """
     Physical represents the translation between raw signal values measured in sensor domain and
@@ -156,7 +202,7 @@ class Physical:
         self.format = format
         self.errorcodes = errorcodes
         self.max_raw = (1 << self.bitwidth) - 1
-        self.low_clamp, self.high_clamp = clamps(self.errorcodes, self.max_raw)
+        self._low_clamp, self._high_clamp = clamps(self.errorcodes, self.max_raw)
 
     def __repr__(self):
         template = "Physical(x1={0.x1}, x2={0.x2}, y1={0.y1}, y2={0.y2}, bitwidth={0.bitwidth!r}," \
@@ -164,7 +210,7 @@ class Physical:
         return template.format(self)
 
     def __eq__(self, other):
-        attrs = ['x1', 'x2', 'y1', 'y2', 'bitwidth', 'unit', 'format']
+        attrs = ['x1', 'x2', 'y1', 'y2', 'bitwidth', 'unit', 'format', 'errorcodes']
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
     @classmethod
@@ -173,7 +219,7 @@ class Physical:
             xml_fragment = ET.fromstring(xml_fragment)
         physical_sae = xml_fragment.find('physical_sae')
         physical = xml_fragment.find('physical')
-        bitfield = xml_fragment.find('isbitfield')
+        #bitfield = xml_fragment.find('isbitfield')
 
         if physical_sae is None and physical is None:
             raise ValueError("XML fragment does not contain a <physical_sae> or <physical> tag")
@@ -216,24 +262,24 @@ class Physical:
         slope = (self.y2 - self.y1) / (self.x2 - self.x1)
         raw_val = floor((self.y1 + slope * (phys_value - self.x1)) + 0.5)
         # print(raw_val)
-        if raw_val <= self.low_clamp:
-            raw_val = self.low_clamp
-        elif raw_val >= self.high_clamp:
-            raw_val = self.high_clamp
+        if raw_val <= self._low_clamp:
+            raw_val = self._low_clamp
+        elif raw_val >= self._high_clamp:
+            raw_val = self._high_clamp
         return raw_val
 
     def validate_raw_value(self, raw_val):
-        if raw_val >= self.max_raw:
+        if raw_val > self.max_raw:
             ret_val, status = 0, Status.ERROR.name
         else:
             ret_val, status = raw_val, Status.WARNING.name
         return ret_val, status
 
     def validate_phy_value(self, phy_value):
-        start_lower_range = self.low_clamp + 1
+        start_lower_range = self._low_clamp + 1
         end_lower_range = self.y1 - 1
         start_upper_range = self.y2 + 1
-        end_upper_range = self.high_clamp - 1
+        end_upper_range = self._high_clamp - 1
 
         converted_raw_value = self.phy2raw(phy_value)
 
@@ -242,9 +288,9 @@ class Physical:
         elif (start_lower_range <= converted_raw_value <= end_lower_range or
               start_upper_range <= converted_raw_value <= end_upper_range):
             signal_quality = Status.WARNING.name
-        elif converted_raw_value == self.y2 and converted_raw_value != self.high_clamp:
+        elif converted_raw_value == self.y2 and converted_raw_value != self._high_clamp:
             signal_quality = Status.WARNING.name
-        elif converted_raw_value == self.y1 and converted_raw_value != self.low_clamp:
+        elif converted_raw_value == self.y1 and converted_raw_value != self._low_clamp:
             signal_quality = Status.WARNING.name
         else:
             signal_quality = Status.ERROR.name
@@ -256,8 +302,8 @@ class SignalDefinition:
     The SignalDefinition class stores all the information contained in a <signaldefinition> tag
     """
 
-    def __init__(self, name, minimum, maximum, unit, physical, alt_name=None, encoding=None,
-                 default=None, frame_number=None, context=None):
+    def __init__(self, name, minimum, maximum, unit, physical=None, alt_name=None, encoding=None,
+                 default=None, frame_number=None, bitfield=None, context=None):
 
         context = context or {}
 
@@ -273,6 +319,7 @@ class SignalDefinition:
         self.frame_number = context.get('fc', frame_number)
         if self.frame_number is not None:
             self.frame_number = int(self.frame_number)
+        self.bitfield = bitfield
 
     def __repr__(self):
         return ('SignalDefinition(name={!r}, alt_name={!r}, minimum={!r}, maximum={!r}, unit={!r},'
@@ -286,7 +333,10 @@ class SignalDefinition:
 
     @property
     def display_format(self):
-        return self.physical.format
+        if self.physical is None:
+            return ""
+        else:
+            return self.physical.format
 
     @classmethod
     def from_xml(cls, xml_fragment, context=None):
@@ -303,19 +353,36 @@ class SignalDefinition:
             raise ValueError("XML fragment is not a <signaldefinition>")
 
         encoding = SignalEncoding.from_xml(xml_fragment)
-        physical = Physical.from_xml(xml_fragment, encoding.bitsize)
-        # print("####", physical)
-        return cls(
-            name=xml_fragment.attrib['name'],
-            alt_name=xml_fragment.attrib['alt_name'],
-            minimum=str(physical.x1),
-            maximum=str(physical.x2),
-            unit=str(physical.unit),
-            encoding=encoding,
-            physical=physical,
-            default=get_default(xml_fragment),
-            context=context,
-        )
+        #physical = Physical.from_xml(xml_fragment, encoding.bitsize)
+        #bitfield = BitField.from_xml(xml_fragment)
+        if xml_fragment.find('isbitfield') is not None:
+            bitfield = BitField.from_xml(xml_fragment)
+            #physical = BitField.from_xml(xml_fragment)
+            return cls(
+                name=xml_fragment.attrib['name'],
+                alt_name=xml_fragment.attrib['alt_name'],
+                minimum="",
+                maximum="",
+                unit="",
+                encoding=encoding,
+                bitfield=bitfield,
+                default=get_default(xml_fragment),
+                context=context,
+            )
+        else:
+            physical = Physical.from_xml(xml_fragment, encoding.bitsize)
+
+            return cls(
+                name=xml_fragment.attrib['name'],
+                alt_name=xml_fragment.attrib['alt_name'],
+                minimum=str(physical.x1),
+                maximum=str(physical.x2),
+                unit=str(physical.unit),
+                encoding=encoding,
+                physical=physical,
+                default=get_default(xml_fragment),
+                context=context,
+            )
 
     def str2number(self, entry_input):
         try:
@@ -356,7 +423,8 @@ class SignalDefinition:
                                        bg_color_indicator,
                                        self.default,
                                        self.display_format,
-                                       self.frame_number)
+                                       self.frame_number,
+                                       self.encoding.bitsize)
         return obj_sig_detail
 
 

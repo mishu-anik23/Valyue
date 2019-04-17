@@ -1,5 +1,6 @@
 from enum import Enum
 from tkinter import *
+from bits import *
 
 COLUMN_COLOR_LIST = [
     '#8EE5EE',
@@ -179,6 +180,18 @@ class SignalRow:
         empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[9], width=24)
         empty_lbl_1.grid(row=self.row+1, column=7)
         empty_lbl_2.grid(row=self.row+1, column=9)
+
+    def chkbtns_bitfield(master, value, bitsize):
+        value_list = int2bits(value, bitsize)
+        for col in range(bitsize):
+            chkbtn_value = IntVar()
+            chkbtn_value.set(value_list[col])
+            chkbtn_bitfield = Checkbutton(master, text="Bit_{}".format(col))#, variable=chkbtn_value)
+            chkbtn_bitfield.grid(row=0, column=col+6)
+            if value_list[col] == 1:
+                chkbtn_bitfield.select()
+            else:
+                chkbtn_bitfield.deselect()
 
     def _create_chkbtn_gateway(self, master):
         """

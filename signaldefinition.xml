@@ -232,6 +232,61 @@
                     <default>0</default>
                 </signaldefinition>
             </frame>
+            <frame>
+                <predefinedsignal name="FC" framecounter="11"/>
+                <predefinedsignal name="DCC"/>
+                <signaldefinition alt_name="Quality 1st ref" name="Quality 1">
+                    <encoding bitsize="8" lsn="0" msn="1" reversed="0"/>
+                    <physical minimum="10" maximum="255" offset="-10" factor="1" unit="" format="d"/>
+                    <default>10</default>
+                </signaldefinition>
+                <signaldefinition alt_name="Quality 2nd ref" name="Quality 2">
+                    <encoding bitsize="8" lsn="2" msn="3" reversed="0"/>
+                    <physical minimum="10" maximum="255" offset="-10" factor="1" unit="" format="d"/>
+                    <default>10</default>
+                </signaldefinition>
+            </frame>
+            <frame>
+                <predefinedsignal name="FC" framecounter="12"/>
+                <predefinedsignal name="DCC"/>
+                <signaldefinition alt_name="Quality 3 (surface 1)" name="Quality 3">
+                    <encoding bitsize="8" lsn="0" msn="1" reversed="0"/>
+                    <physical minimum="10" maximum="255" offset="-10" factor="1" unit="" format="d"/>
+                    <default>10</default>
+                </signaldefinition>
+                <signaldefinition alt_name="Quality 4 (surface 2)" name="Quality 4">
+                    <encoding bitsize="8" lsn="2" msn="3" reversed="0"/>
+                    <physical minimum="10" maximum="255" offset="-10" factor="1" unit="" format="d"/>
+                    <default>10</default>
+                </signaldefinition>
+            </frame>
+            <frame>
+                <predefinedsignal name="FC" framecounter="13"/>
+                <predefinedsignal name="DCC"/>
+                <signaldefinition alt_name="Level signal 2" name="Level signal 1 - Direct-sensor">
+                    <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
+                    <physical minimum="0" maximum="600" offset="0" factor="100" unit="mm" format=".2f"/>
+                    <default>0</default>
+                </signaldefinition>
+            </frame>
+            <frame>
+                <predefinedsignal name="FC" framecounter="14"/>
+                <predefinedsignal name="DCC"/>
+                <signaldefinition alt_name="Status and Error flags" name="Status and Error flags">
+                    <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
+                    <isbitfield/>
+                    <default>0</default>
+                </signaldefinition>
+            </frame>
+            <frame>
+                <predefinedsignal name="FC" framecounter="15"/>
+                <predefinedsignal name="DCC"/>
+                <signaldefinition alt_name="Optional" name="Optional">
+                    <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
+                    <isbitfield/>
+                    <default>0</default>
+                </signaldefinition>
+            </frame>
             <serialchannel>
                 <properties/>
             </serialchannel>
