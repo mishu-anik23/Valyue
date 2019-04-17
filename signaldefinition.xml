@@ -8,7 +8,18 @@
                 <predefinedsignal name="DCC"/>
                 <signaldefinition alt_name="Temperature" name="Temperature">
                     <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
-                    <physical minimum="-40" maximum="165" offset="40" factor="128" unit="°C" format=".3f"/>
+                    <physical minimum="-40" maximum="165" offset="40" factor="128" unit="°C" format=".3f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x0000" desc="IM_0"/>
+                            <errorcode hexvalue="0xFFFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFFFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFFFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFFFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFFFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFFFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xFFF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
             </frame>
@@ -17,7 +28,18 @@
                 <predefinedsignal name="DCC"/>
                 <signaldefinition alt_name="Level signal 1" name="Level signal 2 - Combi-sensor">
                     <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
-                    <physical minimum="0" maximum="600" offset="0" factor="100" unit="mm" format=".2f"/>
+                    <physical minimum="0" maximum="600" offset="0" factor="100" unit="mm" format=".2f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x0000" desc="IM_0"/>
+                            <errorcode hexvalue="0xFFFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFFFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFFFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFFFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFFFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFFFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xFFF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
             </frame>
@@ -26,7 +48,18 @@
                 <predefinedsignal name="DCC"/>
                 <signaldefinition alt_name="Concentration" name="Concentration">
                     <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
-                    <physical minimum="-10" maximum="100" offset="10" factor="100" unit="%" format=".2f"/>
+                    <physical minimum="-10" maximum="100" offset="10" factor="100" unit="%" format=".2f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x0000" desc="IM_0"/>
+                            <errorcode hexvalue="0xFFFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFFFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFFFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFFFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFFFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFFFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xFFF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
             </frame>
@@ -35,7 +68,18 @@
                 <predefinedsignal name="DCC"/>
                 <signaldefinition alt_name="Speed" name="Speed">
                     <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
-                    <physical minimum="0" maximum="3000" offset="0" factor="10" unit="m/s" format=".1f"/>
+                    <physical minimum="0" maximum="3000" offset="0" factor="10" unit="m/s" format=".1f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x0000" desc="IM_0"/>
+                            <errorcode hexvalue="0xFFFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFFFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFFFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFFFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFFFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFFFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xFFF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
             </frame>
@@ -44,7 +88,18 @@
                 <predefinedsignal name="DCC"/>
                 <signaldefinition alt_name="Supply Voltage" name="Supply Voltage">
                     <encoding bitsize="8" lsn="0" msn="1" reversed="0"/>
-                    <physical minimum="0" maximum="40.75" offset="0" factor="6.25" unit="V" format=".2f"/>
+                    <physical minimum="0" maximum="40.75" offset="0" factor="6.25" unit="V" format=".2f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x00" desc="IM_0"/>
+                            <errorcode hexvalue="0xFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
             </frame>
@@ -53,7 +108,18 @@
                 <predefinedsignal name="DCC"/>
                 <signaldefinition alt_name="Runtime 1st ref" name="Runtime 1">
                     <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
-                    <physical minimum="0" maximum="1023" offset="0" factor="64" unit="µs" format=".2f"/>
+                    <physical minimum="0" maximum="1023" offset="0" factor="64" unit="µs" format=".2f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x0000" desc="IM_0"/>
+                            <errorcode hexvalue="0xFFFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFFFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFFFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFFFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFFFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFFFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xFFF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
             </frame>
@@ -62,7 +128,18 @@
                 <predefinedsignal name="DCC"/>
                 <signaldefinition alt_name="Runtime 2nd ref" name="Runtime 2">
                     <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
-                    <physical minimum="0" maximum="1023" offset="0" factor="64" unit="µs" format=".2f"/>
+                    <physical minimum="0" maximum="1023" offset="0" factor="64" unit="µs" format=".2f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x0000" desc="IM_0"/>
+                            <errorcode hexvalue="0xFFFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFFFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFFFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFFFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFFFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFFFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xFFF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
             </frame>
@@ -71,7 +148,18 @@
                 <predefinedsignal name="DCC"/>
                 <signaldefinition alt_name="Runtime 3 (surface 1)" name="Runtime 3">
                     <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
-                    <physical minimum="0" maximum="1023" offset="0" factor="64" unit="µs" format=".2f"/>
+                    <physical minimum="0" maximum="1023" offset="0" factor="64" unit="µs" format=".2f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x0000" desc="IM_0"/>
+                            <errorcode hexvalue="0xFFFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFFFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFFFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFFFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFFFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFFFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xFFF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
             </frame>
@@ -80,7 +168,18 @@
                 <predefinedsignal name="DCC"/>
                 <signaldefinition alt_name="Runtime 4 (surface 2)" name="Runtime 4">
                     <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
-                    <physical minimum="0" maximum="1023" offset="0" factor="64" unit="µs" format=".2f"/>
+                    <physical minimum="0" maximum="1023" offset="0" factor="64" unit="µs" format=".2f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x0000" desc="IM_0"/>
+                            <errorcode hexvalue="0xFFFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFFFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFFFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFFFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFFFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFFFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xFFF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
             </frame>
@@ -89,63 +188,47 @@
                 <predefinedsignal name="DCC"/>
                 <signaldefinition alt_name="Amplitude 1st ref" name="Amplitude 1">
                     <encoding bitsize="8" lsn="0" msn="1" reversed="0"/>
-                    <physical minimum="0" maximum="24.7" offset="0" factor="10" unit="" format=".1f"/>
+                    <physical minimum="0" maximum="24.7" offset="0" factor="10" unit="" format=".1f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x00" desc="IM_0"/>
+                            <errorcode hexvalue="0xFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
                 <signaldefinition alt_name="Amplitude 2nd ref" name="Amplitude 2">
                     <encoding bitsize="8" lsn="2" msn="3" reversed="0"/>
-                    <physical minimum="0" maximum="24.7" offset="0" factor="10" unit="" format=".1f"/>
+                    <physical minimum="0" maximum="24.7" offset="0" factor="10" unit="" format=".1f">
+                        <errorcodes>
+                            <errorcode hexvalue="0x00" desc="IM_0"/>
+                            <errorcode hexvalue="0xFF" desc="IM_7"/>
+                            <errorcode hexvalue="0xFE" desc="IM_6"/>
+                            <errorcode hexvalue="0xFD" desc="IM_5"/>
+                            <errorcode hexvalue="0xFC" desc="IM_4"/>
+                            <errorcode hexvalue="0xFB" desc="IM_3"/>
+                            <errorcode hexvalue="0xFA" desc="IM_2"/>
+                            <errorcode hexvalue="0xF9" desc="IM_1"/>
+                        </errorcodes>
+                    </physical>
                     <default>0</default>
                 </signaldefinition>
             </frame>
             <frame>
                 <predefinedsignal name="FC" framecounter="10"/>
-                <predefinedsignal name="DCC"/>
-                <signaldefinition alt_name="Amplitude 3 (surface 1)" name="Amplitude 3">
+                <signaldefinition alt_name="" name="Amplitude 3">
                     <encoding bitsize="8" lsn="0" msn="1" reversed="0"/>
-                    <physical minimum="0" maximum="24.7" offset="0" factor="10" unit="" format=".1f"/>
+                    <physical minimum="0" maximum="24.7" offset="0" factor="10" unit="" format=".2f"/>
                     <default>0</default>
                 </signaldefinition>
-                <signaldefinition alt_name="Amplitude 4 (surface 2)" name="Amplitude 4">
+                <signaldefinition alt_name="" name="Amplitude 4">
                     <encoding bitsize="8" lsn="2" msn="3" reversed="0"/>
-                    <physical minimum="0" maximum="24.7" offset="0" factor="10" unit="" format=".1f"/>
-                    <default>0</default>
-                </signaldefinition>
-            </frame>
-            <frame>
-                <predefinedsignal name="FC" framecounter="11"/>
-                <predefinedsignal name="DCC"/>
-                <signaldefinition alt_name="Quality 1st ref" name="Quality 1">
-                    <encoding bitsize="8" lsn="0" msn="1" reversed="0"/>
-                    <physical minimum="10" maximum="255" offset="-10" factor="1" unit="" format="d"/>
-                    <default>10</default>
-                </signaldefinition>
-                <signaldefinition alt_name="Quality 2nd ref" name="Quality 2">
-                    <encoding bitsize="8" lsn="2" msn="3" reversed="0"/>
-                    <physical minimum="10" maximum="255" offset="-10" factor="1" unit="" format="d"/>
-                    <default>10</default>
-                </signaldefinition>
-            </frame>
-            <frame>
-                <predefinedsignal name="FC" framecounter="12"/>
-                <predefinedsignal name="DCC"/>
-                <signaldefinition alt_name="Quality 3 (surface 1)" name="Quality 3">
-                    <encoding bitsize="8" lsn="0" msn="1" reversed="0"/>
-                    <physical minimum="10" maximum="255" offset="-10" factor="1" unit="" format="d"/>
-                    <default>10</default>
-                </signaldefinition>
-                <signaldefinition alt_name="Quality 4 (surface 2)" name="Quality 4">
-                    <encoding bitsize="8" lsn="2" msn="3" reversed="0"/>
-                    <physical minimum="10" maximum="255" offset="-10" factor="1" unit="" format="d"/>
-                    <default>10</default>
-                </signaldefinition>
-            </frame>
-            <frame>
-                <predefinedsignal name="FC" framecounter="13"/>
-                <predefinedsignal name="DCC"/>
-                <signaldefinition alt_name="Level signal 2" name="Level signal 1 - Direct-sensor">
-                    <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
-                    <physical minimum="0" maximum="600" offset="0" factor="100" unit="mm" format=".2f"/>
+                    <physical minimum="0" maximum="24.7" offset="0" factor="10" unit="" format=".2f"/>
                     <default>0</default>
                 </signaldefinition>
             </frame>

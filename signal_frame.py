@@ -64,7 +64,6 @@ class SignalFrame(Frame):
 
     def get_values(self):
         lst = [row_obj.get_user_value() for row_obj in self.sigrows]
-        print(lst)
         return lst
 
     def _create_column_heading_signal_name(self, heading_text, column):
@@ -109,4 +108,3 @@ if __name__ == '__main__':
     sigframe = SignalFrame(master=root)
     sigframe.grid()
     root.mainloop()
-    print(signal_details_from_frames())

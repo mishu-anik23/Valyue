@@ -39,15 +39,52 @@ def calc_y2(x1, x2, resolution):
     return y1, y2
 
 
-def spec_conti(minimum, maximum, resolution, bitwidth, offset=None):
-    offset_y_low = 1
+def spec_conti(minimum, maximum, resolution, bitwidth, errorcodes, offset=None):
+
+    if errorcodes:
+        min_raw_value = min(errorcodes)
+        if min_raw_value == 0:
+            offset_y_low = 1
+        else:
+            offset_y_low = 0
+    else:
+        offset_y_low = 0
+
     if offset is not None:
         offset = offset_y_low
     range_diff = intorfloat(maximum) - intorfloat(minimum)
-    offset_y_high = (range_diff / float(resolution)) + offset
+    offset_y_high = floor(range_diff / resolution + offset + 0.5)
 
-    phy_obj = Physical(x1=minimum, x2=maximum, y1=offset_y_low, y2=offset_y_high, bitwidth=bitwidth)
+    phy_obj = Physical(x1=minimum, x2=maximum, y1=offset_y_low, y2=offset_y_high, bitwidth=bitwidth,
+                       errorcodes=errorcodes)
     return phy_obj
+
+
+def boundaries_reserve_values(errdict):
+    if not errdict:
+        return None, None
+
+    if 0 in errdict:
+        if len(errdict) == 1:
+            return 0, None
+        else:
+            return 0, sorted(errdict)[1]
+    else:
+        return None, min(errdict)
+
+
+def clamps(errorcodes, max_raw):
+    lower_minima, higher_minima = boundaries_reserve_values(errorcodes)
+    if lower_minima is None:
+        low = 0
+    else:
+        low = 1
+
+    if higher_minima is None:
+        high = max_raw
+    else:
+        high = higher_minima - 1
+    return low, high
 
 
 def create_signal(xml_signaldefinition, context=None):
@@ -106,26 +143,24 @@ class Physical:
     Physical represents the translation between raw signal values measured in sensor domain and
     physical units given in the Tkinter Entry widget by user.
     """
-    def __init__(self, x1, x2, y1, y2, bitwidth, unit=None, format=None):
+    def __init__(self, x1, x2, y1, y2, bitwidth, unit=None, format=None, errorcodes=None):
         try:
             self.x1 = intorfloat(x1)
             self.x2 = intorfloat(x2)
         except TypeError:
             raise ValueError("Missing or non-numeric input for x1 or x2")
-        # if unit is None:
-        #     raise ValueError("Parameter unit must be given")
         self.y1 = int(y1)
         self.y2 = int(y2)
         self.bitwidth = bitwidth
         self.unit = unit
         self.format = format
-        self.low_clamp = 1
-        self.high_clamp = high_clamp(bitwidth)
+        self.errorcodes = errorcodes
         self.max_raw = (1 << self.bitwidth) - 1
-        self.reserved_values = {}
+        self.low_clamp, self.high_clamp = clamps(self.errorcodes, self.max_raw)
 
     def __repr__(self):
-        template = "Physical(x1={0.x1}, x2={0.x2}, y1={0.y1}, y2={0.y2}, bitwidth={0.bitwidth!r})"
+        template = "Physical(x1={0.x1}, x2={0.x2}, y1={0.y1}, y2={0.y2}, bitwidth={0.bitwidth!r}," \
+                   "errorcodes={0.errorcodes!r})"
         return template.format(self)
 
     def __eq__(self, other):
@@ -152,14 +187,14 @@ class Physical:
             else:
                 errorcodes_xml = physical.find('errorcodes')
                 errorcodes = read_errorcodes(errorcodes_xml)
+                #print(errorcodes)
                 minimum = intorfloat(physical.attrib['minimum'])
                 maximum = intorfloat(physical.attrib['maximum'])
                 resolution = 1 / (intorfloat(physical.attrib['factor']))
                 offset = intorfloat(physical.attrib['offset'])
-                phy_obj = spec_conti(minimum, maximum, resolution, bitwidth, offset)
+                phy_obj = spec_conti(minimum, maximum, resolution, bitwidth, errorcodes, offset)
                 phy_obj.format = physical.attrib['format']
                 phy_obj.unit = physical.attrib['unit']
-                phy_obj.set_reserved_values(errorcodes)
         return phy_obj
 
     def raw2phys(self, raw_value):
@@ -187,24 +222,6 @@ class Physical:
             raw_val = self.high_clamp
         return raw_val
 
-    def set_reserved_values(self, xml_fragment_errcode):
-        for errcode in xml_fragment_errcode:
-            raw_value = int(errcode.attrib['hexvalue'], 16)
-            self.reserved_values[raw_value] = errcode.attrib['desc']
-
-
-    def reserved_value(self, raw_value):
-        upper_limit = self.max_raw + 1
-        index = upper_limit - raw_value
-        indicator_message_list = ["IM_0", "IM_1", "IM_2", "IM_3", "IM_4", "IM_5", "IM_6", "IM_7"]
-        if raw_value == 0:
-            indicator_message = indicator_message_list[0]
-        elif 1 <= index <= 7:
-            indicator_message = indicator_message_list[index]
-        else:
-            indicator_message = ""
-        return indicator_message
-
     def validate_raw_value(self, raw_val):
         if raw_val >= self.max_raw:
             ret_val, status = 0, Status.ERROR.name
@@ -213,18 +230,21 @@ class Physical:
         return ret_val, status
 
     def validate_phy_value(self, phy_value):
-        start_lower_range = 2
+        start_lower_range = self.low_clamp + 1
         end_lower_range = self.y1 - 1
         start_upper_range = self.y2 + 1
-        end_upper_range = (1 << self.bitwidth) - 9
+        end_upper_range = self.high_clamp - 1
+
         converted_raw_value = self.phy2raw(phy_value)
 
         if self.x1 <= phy_value <= self.x2:
             signal_quality = Status.OK.name
-        elif converted_raw_value == self.y1 or converted_raw_value == self.y2:
-            signal_quality = Status.WARNING.name
         elif (start_lower_range <= converted_raw_value <= end_lower_range or
               start_upper_range <= converted_raw_value <= end_upper_range):
+            signal_quality = Status.WARNING.name
+        elif converted_raw_value == self.y2 and converted_raw_value != self.high_clamp:
+            signal_quality = Status.WARNING.name
+        elif converted_raw_value == self.y1 and converted_raw_value != self.low_clamp:
             signal_quality = Status.WARNING.name
         else:
             signal_quality = Status.ERROR.name
