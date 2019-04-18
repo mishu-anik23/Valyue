@@ -45,7 +45,7 @@ class SignalFrame(Frame):
         # self.sigrows.append(row)
         for signal_details in signal_details_from_frames():
             self.add_signal_row(((len(self.sigrows) + 1) * 2), signal_details)
-        self._create_button_widget()
+        self._create_button_widget((len(self.sigrows) + 1) * 2)
         self._create_column_heading_signal_name(heading_text="Signal Name 1", column=0)
         self._create_column_heading_signal_name(heading_text="Signal Name 2", column=3)
         self._create_column_heading_signal_widgets()
@@ -58,9 +58,9 @@ class SignalFrame(Frame):
             sigrow = SignalRow(self, row=row_pos, signal_details=signal_details)
             self.sigrows.append(sigrow)
 
-    def _create_button_widget(self):
+    def _create_button_widget(self, row):
         self.b_update = Button(self, text="Update", command=self.commit, state=NORMAL)
-        self.b_update.grid(row=7, column=12, sticky='NE', padx=7)
+        self.b_update.grid(row=row, column=12, sticky='NE', padx=7)
 
     def get_values(self):
         lst = [row_obj.get_user_value() for row_obj in self.sigrows]
@@ -102,6 +102,7 @@ class SignalFrame(Frame):
             empty_lbl = Label(self, text="", bg=COLUMN_COLOR_LIST[col], width=24)
             heading_sig_widgets.grid(row=0, column=col, sticky=W + E)
             empty_lbl.grid(row=1, column=col)
+
 
 if __name__ == '__main__':
     root = Tk()

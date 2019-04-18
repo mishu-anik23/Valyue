@@ -1,6 +1,5 @@
 from enum import Enum
 from tkinter import *
-from bits import *
 
 COLUMN_COLOR_LIST = [
     '#8EE5EE',
@@ -58,13 +57,13 @@ class ValidatingEntry(Entry):
         the entered value is validated. If validation fails, the background of
         the entry field changes to red, indicating an error to the user.
         """
-        raw, status = self.validate(self._variable.get())
-        bg_color_indicator(self)
+        _, status = self.validate(self._variable.get())
+        bg_color_indicator(self, status)
 
     def commit(self, dummy=None):
         val = self._variable.get()
         _, status = self.validate(val)
-        if not status.ERROR:
+        if status != Status.ERROR:
             self._value = val
         print("Your last Entered Value : {}".format(self._value))
 
@@ -77,7 +76,6 @@ class ValidatingEntry(Entry):
             self._variable.set("{:{}}".format(float(value), format))
         else:
             self._variable.set("{:{}}".format(int(value), format))
-
 
 
 class SignalRow:
@@ -94,10 +92,13 @@ class SignalRow:
         self.signal_active = False
         (self.signal1_details, self.signal2_details) = signal_details
 
-        self._create_entry_measured_value(master, initval_sig1='', initval_sig2='')
-        self._create_entry_user_value(master)
-        self._create_chkbtn_gateway(master)
-        self._create_chkbtn_signal_active(master)
+        if self.signal1_details.isbitfield:
+            BitArray(master, self.signal1_details.bitwidth, self.signal1_details.default).grid(row=self.row, column=6)
+        else:
+            self._create_entry_measured_value(master, initval_sig1='', initval_sig2='')
+            self._create_entry_user_value(master)
+            self._create_chkbtn_gateway(master)
+            self._create_chkbtn_signal_active(master)
 
         self._create_signal_label(master, row=row, column=0,
                                   signame=self.signal1_details.name,
@@ -114,7 +115,8 @@ class SignalRow:
                                       )
 
     def commit(self, dummy=None):
-        self.entry_sig1.commit()
+        if not self.signal1_details.isbitfield:
+            self.entry_sig1.commit()
         if self.signal2_details is not None:
             self.entry_sig2.commit()
 
@@ -147,18 +149,21 @@ class SignalRow:
             master =  Main tkinter frame
             initial_value = Initial Value of the measured signal; default = " ".
         """
-        self.entry_measured_value_sig1 = StringVar()
-        self.entry_measured_value_sig2 = StringVar()
-        self.set_measured_value(initval_sig1, initval_sig2)
-        entry_sig1 = Entry(master, textvariable=self.entry_measured_value_sig1, width=28)
-        entry_sig2 = Entry(master, textvariable=self.entry_measured_value_sig2, width=28)
+        # self.entry_measured_value_sig1 = StringVar()
+        # self.entry_measured_value_sig2 = StringVar()
+        # self.set_measured_value(initval_sig1, initval_sig2)
+        # entry_sig1 = Entry(master, textvariable=self.entry_measured_value_sig1, width=28)
+        # entry_sig2 = Entry(master, textvariable=self.entry_measured_value_sig2, width=28)
+        entry_sig1 = Entry(master, width=28)
         entry_sig1.grid(row=self.row, column=6)
-        entry_sig2.grid(row=self.row, column=8)
         empty_lbl_1 = Label(master, text="", bg=COLUMN_COLOR_LIST[6], width=24)
-        empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[8], width=24)
         empty_lbl_1.grid(row=self.row+1, column=6)
-        empty_lbl_2.grid(row=self.row+1, column=8)
 
+        if self.signal2_details is not None:
+            entry_sig2 = Entry(master, width=28)
+            entry_sig2.grid(row=self.row, column=8)
+            empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[8], width=24)
+            empty_lbl_2.grid(row=self.row+1, column=8)
 
     def _create_entry_user_value(self, master):
         """
@@ -170,28 +175,17 @@ class SignalRow:
                                           indicate=self.signal1_details.indicate, width=28)
         self.entry_sig1.grid(row=self.row,column=7)
         self.entry_sig1.set_value(self.signal1_details.default, self.signal1_details.format)
+        empty_lbl_1 = Label(master, text="", bg=COLUMN_COLOR_LIST[7], width=24)
+        empty_lbl_1.grid(row=self.row+1, column=7)
         if self.signal2_details is not None:
             self.entry_sig2 = ValidatingEntry(master, validate=self.signal2_details.validate,
                                               indicate=self.signal2_details.indicate, width=28)
             self.entry_sig2.grid(row=self.row,column=9)
 
             self.entry_sig2.set_value(self.signal2_details.default, self.signal2_details.format)
-        empty_lbl_1 = Label(master, text="", bg=COLUMN_COLOR_LIST[7], width=24)
-        empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[9], width=24)
-        empty_lbl_1.grid(row=self.row+1, column=7)
-        empty_lbl_2.grid(row=self.row+1, column=9)
 
-    def chkbtns_bitfield(master, value, bitsize):
-        value_list = int2bits(value, bitsize)
-        for col in range(bitsize):
-            chkbtn_value = IntVar()
-            chkbtn_value.set(value_list[col])
-            chkbtn_bitfield = Checkbutton(master, text="Bit_{}".format(col))#, variable=chkbtn_value)
-            chkbtn_bitfield.grid(row=0, column=col+6)
-            if value_list[col] == 1:
-                chkbtn_bitfield.select()
-            else:
-                chkbtn_bitfield.deselect()
+            empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[9], width=24)
+            empty_lbl_2.grid(row=self.row+1, column=9)
 
     def _create_chkbtn_gateway(self, master):
         """
@@ -221,15 +215,6 @@ class SignalRow:
 
         return user_value_sig1, user_value_sig2
 
-    def set_measured_value(self, value_sig1, value_sig2):
-        """
-        Set the measured values for 2 signals in the respective Measured value Entry field.
-        Args:
-            value_sig1 & value_sig2  = To set measured values for 2 signals.
-        """
-        self.entry_measured_value_sig1.set(value_sig1)
-        self.entry_measured_value_sig2.set(value_sig2)
-
     def get_gateway(self):
         """Get the current status of Gateway CheckButton."""
         return self.gateway
@@ -255,14 +240,65 @@ class SignalRow:
         self.chkbtn_signal_active.set(bool_value)
 
 
-def bg_color_indicator(widget):
-    status = Status
-    if status.OK:
-        widget.config(bg=status.OK.value)
-    elif status.WARNING:
-        widget.config(bg=status.WARNING.value)
+def bg_color_indicator(widget, status):
+    if status == Status.OK:
+        widget.config(bg=Status.OK.value)
+    elif status == Status.WARNING:
+        widget.config(bg=Status.WARNING.value)
     else:
-        widget.config(bg=status.ERROR.value)
+        widget.config(bg=Status.ERROR.value)
+
+
+def int2bits(number, count):
+    """
+    converts an Integer to its Binary representation.
+    Args:
+        number = input Decimal number
+        count  = No of times of LSB extraction until the given Decimal number become 0
+    Expected Return:
+        List of bits required to built the binary value of given Decimal number.
+    """
+    bits = []
+    for i in range(count):
+        bits.append(number & 1)
+        number >>= 1
+    return list(reversed(bits))
+
+
+class BitArray(Frame):
+    def __init__(self, master, bitwidth, value, **kwargs):
+        super().__init__(master, **kwargs)
+        self.bitwidth = bitwidth
+        self.chkbtns_bitfield = []
+        for col in range(bitwidth):
+            var = IntVar()
+            chkbtn_bitfield = Checkbutton(self, variable=var)
+            chkbtn_bitfield.grid(row=0, column=col)
+            chkbtn_bitfield.var = var
+            self.chkbtns_bitfield.append(chkbtn_bitfield)
+        self.set_value(value)
+
+    def set_value(self, value):
+        bit_list = int2bits(value, self.bitwidth)
+        for index, bit in enumerate(bit_list):
+            if bit == 1:
+                self.chkbtns_bitfield[index].select()
+            else:
+                self.chkbtns_bitfield[index].deselect()
+
+    def get_value(self):
+        bits = []
+        for chkbtn in self.chkbtns_bitfield:
+            bit = chkbtn.var.get()
+            bits.append(bit)
+        ret_num = 0
+        for bit in bits:
+            ret_num <<= 1
+            ret_num = ret_num | bit
+        return ret_num
+
+
+
 
 
 

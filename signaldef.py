@@ -161,8 +161,6 @@ class BitField:
     def from_xml(cls, xml_fragment):
         if isinstance(xml_fragment, str):
             xml_fragment = ET.fromstring(xml_fragment)
-        # bitfield = xml_fragment.find('isbitfield')
-        # if bitfield is not None:
         encoding = xml_fragment.find('encoding')
         bitsize = encoding.attrib['bitsize']
         return cls(bitsize)
@@ -175,13 +173,13 @@ class BitField:
 
     def validate_raw_value(self, raw_val):
         if raw_val > self.max_raw:
-            ret_val, status = 0, Status.ERROR.name
+            ret_val, status = 0, Status.ERROR
         else:
-            ret_val, status = raw_val, Status.OK.name
+            ret_val, status = raw_val, Status.OK
         return ret_val, status
 
     def validate_phy_value(self, phy_value):
-        return phy_value, Status.OK.name
+        return phy_value, Status.OK
 
 
 class Physical:
@@ -219,7 +217,6 @@ class Physical:
             xml_fragment = ET.fromstring(xml_fragment)
         physical_sae = xml_fragment.find('physical_sae')
         physical = xml_fragment.find('physical')
-        #bitfield = xml_fragment.find('isbitfield')
 
         if physical_sae is None and physical is None:
             raise ValueError("XML fragment does not contain a <physical_sae> or <physical> tag")
@@ -233,7 +230,6 @@ class Physical:
             else:
                 errorcodes_xml = physical.find('errorcodes')
                 errorcodes = read_errorcodes(errorcodes_xml)
-                #print(errorcodes)
                 minimum = intorfloat(physical.attrib['minimum'])
                 maximum = intorfloat(physical.attrib['maximum'])
                 resolution = 1 / (intorfloat(physical.attrib['factor']))
@@ -269,15 +265,13 @@ class Physical:
         return raw_val
 
     def validate_raw_value(self, raw_val):
-        status = Status
         if raw_val > self.max_raw:
-            ret_val, status = 0, status.ERROR
+            ret_val, status = 0, Status.ERROR
         else:
-            ret_val, status = raw_val, status.WARNING
+            ret_val, status = raw_val, Status.WARNING
         return ret_val, status
 
     def validate_phy_value(self, phy_value):
-        status = Status
         start_lower_range = self._low_clamp + 1
         end_lower_range = self.y1 - 1
         start_upper_range = self.y2 + 1
@@ -286,16 +280,16 @@ class Physical:
         converted_raw_value = self.phy2raw(phy_value)
 
         if self.x1 <= phy_value <= self.x2:
-            signal_quality = status.OK
+            signal_quality = Status.OK
         elif (start_lower_range <= converted_raw_value <= end_lower_range or
               start_upper_range <= converted_raw_value <= end_upper_range):
-            signal_quality = status.WARNING
+            signal_quality = Status.WARNING
         elif converted_raw_value == self.y2 and converted_raw_value != self._high_clamp:
-            signal_quality = status.WARNING
+            signal_quality = Status.WARNING
         elif converted_raw_value == self.y1 and converted_raw_value != self._low_clamp:
-            signal_quality = status.WARNING
+            signal_quality = Status.WARNING
         else:
-            signal_quality = status.ERROR
+            signal_quality = Status.ERROR
         return converted_raw_value, signal_quality
 
 
@@ -352,12 +346,11 @@ class SignalDefinition:
             raise ValueError("XML fragment is not a <signaldefinition>")
 
         encoding = SignalEncoding.from_xml(xml_fragment)
-        #physical = Physical.from_xml(xml_fragment, encoding.bitsize)
-        #bitfield = BitField.from_xml(xml_fragment)
         if xml_fragment.find('isbitfield') is not None:
-            cls.isbitfield = True
+            bitfield = True
             physical = BitField.from_xml(xml_fragment)
         else:
+            bitfield = False
             physical = Physical.from_xml(xml_fragment, encoding.bitsize)
 
         return cls(
@@ -369,39 +362,38 @@ class SignalDefinition:
             encoding=encoding,
             physical=physical,
             default=get_default(xml_fragment),
+            isbitfield=bitfield,
             context=context,
         )
 
     def str2number(self, entry_input):
-        entrytyp = EntryType
         try:
             if entry_input[:2] == '0x':
                 base = 16
-                entry_type = entrytyp.RAW
+                entry_type = EntryType.RAW
             elif entry_input[:2] == '0b':
                 base = 2
-                entry_type = entrytyp.RAW
+                entry_type = EntryType.RAW
             else:
                 base = 10
-                entry_type = entrytyp.PHYSICAL
+                entry_type = EntryType.PHYSICAL
             converted_value = int(entry_input, base)
         except ValueError:
             try:
                 converted_value = float(entry_input)
-                entry_type = entrytyp.PHYSICAL
+                entry_type = EntryType.PHYSICAL
             except ValueError:
-                return 0, entrytyp.INVALID
+                return 0, EntryType.INVALID
         return converted_value, entry_type
 
     def validate_str_entry(self, str_entry):
-        status = Status
         value, entrytyp = self.str2number(str_entry)
-        if entrytyp.RAW:
+        if entrytyp == EntryType.RAW:
             raw_val, stat = self.physical.validate_raw_value(value)
-        elif entrytyp.PHYSICAL:
+        elif entrytyp == EntryType.PHYSICAL:
             raw_val, stat = self.physical.validate_phy_value(value)
         else:
-            raw_val, stat = 0, status.ERROR
+            raw_val, stat = 0, Status.ERROR
         return raw_val, stat
 
     def get_signal_details(self):
