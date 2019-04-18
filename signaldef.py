@@ -11,8 +11,8 @@ from xml.etree import cElementTree as ET
 from signalrow_valid import *
 
 
-SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit',
-                                             'validate', 'indicate', 'default', 'format', 'frame', 'bitsize'])
+SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit', 'validate',
+                                             'indicate', 'default', 'format', 'frame', 'bitwidth', 'isbitfield'])
 
 def intorfloat(x):
     """Convert string input to int if possible, otherwise try converting to float
@@ -269,13 +269,15 @@ class Physical:
         return raw_val
 
     def validate_raw_value(self, raw_val):
+        status = Status
         if raw_val > self.max_raw:
-            ret_val, status = 0, Status.ERROR.name
+            ret_val, status = 0, status.ERROR
         else:
-            ret_val, status = raw_val, Status.WARNING.name
+            ret_val, status = raw_val, status.WARNING
         return ret_val, status
 
     def validate_phy_value(self, phy_value):
+        status = Status
         start_lower_range = self._low_clamp + 1
         end_lower_range = self.y1 - 1
         start_upper_range = self.y2 + 1
@@ -284,16 +286,16 @@ class Physical:
         converted_raw_value = self.phy2raw(phy_value)
 
         if self.x1 <= phy_value <= self.x2:
-            signal_quality = Status.OK.name
+            signal_quality = status.OK
         elif (start_lower_range <= converted_raw_value <= end_lower_range or
               start_upper_range <= converted_raw_value <= end_upper_range):
-            signal_quality = Status.WARNING.name
+            signal_quality = status.WARNING
         elif converted_raw_value == self.y2 and converted_raw_value != self._high_clamp:
-            signal_quality = Status.WARNING.name
+            signal_quality = status.WARNING
         elif converted_raw_value == self.y1 and converted_raw_value != self._low_clamp:
-            signal_quality = Status.WARNING.name
+            signal_quality = status.WARNING
         else:
-            signal_quality = Status.ERROR.name
+            signal_quality = status.ERROR
         return converted_raw_value, signal_quality
 
 
@@ -302,8 +304,8 @@ class SignalDefinition:
     The SignalDefinition class stores all the information contained in a <signaldefinition> tag
     """
 
-    def __init__(self, name, minimum, maximum, unit, physical=None, alt_name=None, encoding=None,
-                 default=None, frame_number=None, bitfield=None, context=None):
+    def __init__(self, name, minimum, maximum, unit, physical, alt_name=None, encoding=None,
+                 default=None, frame_number=None, isbitfield=False, context=None):
 
         context = context or {}
 
@@ -319,7 +321,7 @@ class SignalDefinition:
         self.frame_number = context.get('fc', frame_number)
         if self.frame_number is not None:
             self.frame_number = int(self.frame_number)
-        self.bitfield = bitfield
+        self.isbitfield = isbitfield
 
     def __repr__(self):
         return ('SignalDefinition(name={!r}, alt_name={!r}, minimum={!r}, maximum={!r}, unit={!r},'
@@ -333,10 +335,7 @@ class SignalDefinition:
 
     @property
     def display_format(self):
-        if self.physical is None:
-            return ""
-        else:
-            return self.physical.format
+        return self.physical.format
 
     @classmethod
     def from_xml(cls, xml_fragment, context=None):
@@ -356,63 +355,54 @@ class SignalDefinition:
         #physical = Physical.from_xml(xml_fragment, encoding.bitsize)
         #bitfield = BitField.from_xml(xml_fragment)
         if xml_fragment.find('isbitfield') is not None:
-            bitfield = BitField.from_xml(xml_fragment)
-            #physical = BitField.from_xml(xml_fragment)
-            return cls(
-                name=xml_fragment.attrib['name'],
-                alt_name=xml_fragment.attrib['alt_name'],
-                minimum="",
-                maximum="",
-                unit="",
-                encoding=encoding,
-                bitfield=bitfield,
-                default=get_default(xml_fragment),
-                context=context,
-            )
+            cls.isbitfield = True
+            physical = BitField.from_xml(xml_fragment)
         else:
             physical = Physical.from_xml(xml_fragment, encoding.bitsize)
 
-            return cls(
-                name=xml_fragment.attrib['name'],
-                alt_name=xml_fragment.attrib['alt_name'],
-                minimum=str(physical.x1),
-                maximum=str(physical.x2),
-                unit=str(physical.unit),
-                encoding=encoding,
-                physical=physical,
-                default=get_default(xml_fragment),
-                context=context,
-            )
+        return cls(
+            name=xml_fragment.attrib['name'],
+            alt_name=xml_fragment.attrib['alt_name'],
+            minimum=str(physical.x1),
+            maximum=str(physical.x2),
+            unit=str(physical.unit),
+            encoding=encoding,
+            physical=physical,
+            default=get_default(xml_fragment),
+            context=context,
+        )
 
     def str2number(self, entry_input):
+        entrytyp = EntryType
         try:
             if entry_input[:2] == '0x':
                 base = 16
-                entry_type = EntryType.RAW.name
+                entry_type = entrytyp.RAW
             elif entry_input[:2] == '0b':
                 base = 2
-                entry_type = EntryType.RAW.name
+                entry_type = entrytyp.RAW
             else:
                 base = 10
-                entry_type = EntryType.PHYSICAL.name
+                entry_type = entrytyp.PHYSICAL
             converted_value = int(entry_input, base)
         except ValueError:
             try:
                 converted_value = float(entry_input)
-                entry_type = EntryType.PHYSICAL.name
+                entry_type = entrytyp.PHYSICAL
             except ValueError:
-                return 0, EntryType.INVALID.name
+                return 0, entrytyp.INVALID
         return converted_value, entry_type
 
     def validate_str_entry(self, str_entry):
-        value, typ = self.str2number(str_entry)
-        if typ == EntryType.RAW.name:
-            raw_val, status = self.physical.validate_raw_value(value)
-        elif typ == EntryType.PHYSICAL.name:
-            raw_val, status = self.physical.validate_phy_value(value)
+        status = Status
+        value, entrytyp = self.str2number(str_entry)
+        if entrytyp.RAW:
+            raw_val, stat = self.physical.validate_raw_value(value)
+        elif entrytyp.PHYSICAL:
+            raw_val, stat = self.physical.validate_phy_value(value)
         else:
-            raw_val, status = 0, Status.ERROR.name
-        return raw_val, status
+            raw_val, stat = 0, status.ERROR
+        return raw_val, stat
 
     def get_signal_details(self):
         obj_sig_detail = SignalDetails(self.name,
@@ -424,7 +414,8 @@ class SignalDefinition:
                                        self.default,
                                        self.display_format,
                                        self.frame_number,
-                                       self.encoding.bitsize)
+                                       self.physical.bitwidth,
+                                       self.isbitfield)
         return obj_sig_detail
 
 

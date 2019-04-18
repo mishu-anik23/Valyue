@@ -59,12 +59,12 @@ class ValidatingEntry(Entry):
         the entry field changes to red, indicating an error to the user.
         """
         raw, status = self.validate(self._variable.get())
-        bg_color_indicator(self, status)
+        bg_color_indicator(self)
 
     def commit(self, dummy=None):
         val = self._variable.get()
         _, status = self.validate(val)
-        if status != Status.ERROR.name:
+        if not status.ERROR:
             self._value = val
         print("Your last Entered Value : {}".format(self._value))
 
@@ -255,13 +255,14 @@ class SignalRow:
         self.chkbtn_signal_active.set(bool_value)
 
 
-def bg_color_indicator(widget, status):
-    if status == Status.OK.name:
-        widget.config(bg=Status.OK.value)
-    elif status == Status.WARNING.name:
-        widget.config(bg=Status.WARNING.value)
+def bg_color_indicator(widget):
+    status = Status
+    if status.OK:
+        widget.config(bg=status.OK.value)
+    elif status.WARNING:
+        widget.config(bg=status.WARNING.value)
     else:
-        widget.config(bg=Status.ERROR.value)
+        widget.config(bg=status.ERROR.value)
 
 
 
