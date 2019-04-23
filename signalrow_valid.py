@@ -2,6 +2,7 @@ from enum import Enum
 from tkinter import *
 
 COLUMN_COLOR_LIST = [
+    None,
     '#8EE5EE',
     '#8EE5EE',
     '#8EE5EE',
@@ -93,21 +94,22 @@ class SignalRow:
         (self.signal1_details, self.signal2_details) = signal_details
 
         if self.signal1_details.isbitfield:
-            BitArray(master, self.signal1_details.bitwidth, self.signal1_details.default).grid(row=self.row, column=6)
+            BitArray(master, self.signal1_details.bitwidth, self.signal1_details.default).grid(row=self.row, column=7)
         else:
             self._create_entry_measured_value(master, initval_sig1='', initval_sig2='')
             self._create_entry_user_value(master)
             self._create_chkbtn_gateway(master)
             self._create_chkbtn_signal_active(master)
 
-        self._create_signal_label(master, row=row, column=0,
+        self._create_signal_frame_label(master, row=row, column=0, frame_number=self.signal1_details.frame_number)
+        self._create_signal_label(master, row=row, column=1,
                                   signame=self.signal1_details.name,
                                   minimum=self.signal1_details.minimum,
                                   maximum=self.signal1_details.maximum,
                                   unit=self.signal1_details.unit,
                                   )
         if self.signal2_details is not None:
-            self._create_signal_label(master, row=row, column=3,
+            self._create_signal_label(master, row=row, column=4,
                                       signame=self.signal2_details.name,
                                       minimum=self.signal2_details.minimum,
                                       maximum=self.signal2_details.maximum,
@@ -137,10 +139,17 @@ class SignalRow:
         lbl_min = Label(master, text=minimum, bg=COLUMN_COLOR_LIST[column], font=("Helvetica", 9))
         lbl_max = Label(master, text=maximum, bg=COLUMN_COLOR_LIST[column + 1], font=("Helvetica", 9))
         lbl_unit = Label(master, text=unit, bg=COLUMN_COLOR_LIST[column + 2], font=("Helvetica", 9))
-        lbl_name.grid(row=row, column=column, columnspan=3, sticky=W+E)
+        #empty_label = Label(master, text="", bg=None)
+        lbl_name.grid(row=row, column=column, columnspan=3, sticky=W+E, pady=(5,0))
         lbl_min.grid(row=row+1, column=column, sticky=W+E)
         lbl_max.grid(row=row+1, column=column+1, sticky=W+E)
         lbl_unit.grid(row=row+1, column=column+2, sticky=W+E)
+        #empty_label.grid(row=row+2, column=column, columnspan=3, sticky=W+E)
+
+    def _create_signal_frame_label(self, master, row, column, frame_number):
+        lbl_frame_num = Label(master, text="{}".format(frame_number),
+                              bg=COLUMN_COLOR_LIST[column], font=("Helvetica", 10))
+        lbl_frame_num.grid(row=row, rowspan=2, column=column)
 
     def _create_entry_measured_value(self, master, initval_sig1, initval_sig2):
         """
@@ -155,15 +164,15 @@ class SignalRow:
         # entry_sig1 = Entry(master, textvariable=self.entry_measured_value_sig1, width=28)
         # entry_sig2 = Entry(master, textvariable=self.entry_measured_value_sig2, width=28)
         entry_sig1 = Entry(master, width=28)
-        entry_sig1.grid(row=self.row, column=6)
-        empty_lbl_1 = Label(master, text="", bg=COLUMN_COLOR_LIST[6], width=24)
-        empty_lbl_1.grid(row=self.row+1, column=6)
+        entry_sig1.grid(row=self.row, column=7)
+        empty_lbl_1 = Label(master, text="", bg=COLUMN_COLOR_LIST[7], width=24)
+        empty_lbl_1.grid(row=self.row+1, column=7)
 
         if self.signal2_details is not None:
             entry_sig2 = Entry(master, width=28)
-            entry_sig2.grid(row=self.row, column=8)
-            empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[8], width=24)
-            empty_lbl_2.grid(row=self.row+1, column=8)
+            entry_sig2.grid(row=self.row, column=9)
+            empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[9], width=24)
+            empty_lbl_2.grid(row=self.row+1, column=9)
 
     def _create_entry_user_value(self, master):
         """
@@ -173,19 +182,19 @@ class SignalRow:
         """
         self.entry_sig1 = ValidatingEntry(master, validate=self.signal1_details.validate,
                                           indicate=self.signal1_details.indicate, width=28)
-        self.entry_sig1.grid(row=self.row,column=7)
+        self.entry_sig1.grid(row=self.row,column=8)
         self.entry_sig1.set_value(self.signal1_details.default, self.signal1_details.format)
-        empty_lbl_1 = Label(master, text="", bg=COLUMN_COLOR_LIST[7], width=24)
-        empty_lbl_1.grid(row=self.row+1, column=7)
+        empty_lbl_1 = Label(master, text="", bg=COLUMN_COLOR_LIST[8], width=24)
+        empty_lbl_1.grid(row=self.row+1, column=8)
         if self.signal2_details is not None:
             self.entry_sig2 = ValidatingEntry(master, validate=self.signal2_details.validate,
                                               indicate=self.signal2_details.indicate, width=28)
-            self.entry_sig2.grid(row=self.row,column=9)
+            self.entry_sig2.grid(row=self.row,column=10)
 
             self.entry_sig2.set_value(self.signal2_details.default, self.signal2_details.format)
 
-            empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[9], width=24)
-            empty_lbl_2.grid(row=self.row+1, column=9)
+            empty_lbl_2 = Label(master, text="", bg=COLUMN_COLOR_LIST[10], width=24)
+            empty_lbl_2.grid(row=self.row+1, column=10)
 
     def _create_chkbtn_gateway(self, master):
         """
@@ -196,7 +205,7 @@ class SignalRow:
         self.chkbtn_gateway = BooleanVar()
         self.set_gateway(self.gateway)
         chkbtn_gateway = Checkbutton(master, text="Gateway", variable=self.chkbtn_gateway)
-        chkbtn_gateway.grid(row=self.row, column=10)
+        chkbtn_gateway.grid(row=self.row, column=11)
 
     def _create_chkbtn_signal_active(self, master):
         """
@@ -207,7 +216,7 @@ class SignalRow:
         self.chkbtn_signal_active = BooleanVar()
         self.set_signal_active(self.signal_active)
         chkbtn_sig_act = Checkbutton(master, text="Signal Active", variable=self.signal_active)
-        chkbtn_sig_act.grid(row=self.row, column=11)
+        chkbtn_sig_act.grid(row=self.row, column=12)
 
     def get_user_value(self):
         user_value_sig1 = self.entry_sig1.get_value()
@@ -272,19 +281,19 @@ class BitArray(Frame):
         self.chkbtns_bitfield = []
         for col in range(bitwidth):
             var = IntVar()
-            chkbtn_bitfield = Checkbutton(self, variable=var)
-            chkbtn_bitfield.grid(row=0, column=col)
+            chkbtn_bitfield = Checkbutton(self, variable=var, borderwidth=0, highlightthickness=0)
+            chkbtn_bitfield.grid(row=0, column=col, padx=(0,0))
             chkbtn_bitfield.var = var
             self.chkbtns_bitfield.append(chkbtn_bitfield)
         self.set_value(value)
 
     def set_value(self, value):
-        bit_list = int2bits(value, self.bitwidth)
-        for index, bit in enumerate(bit_list):
-            if bit == 1:
-                self.chkbtns_bitfield[index].select()
+        for i in range(self.bitwidth):
+            if value & 1:
+                self.chkbtns_bitfield[i].select()
             else:
-                self.chkbtns_bitfield[index].deselect()
+                self.chkbtns_bitfield[i].deselect()
+            value >>= 1
 
     def get_value(self):
         bits = []

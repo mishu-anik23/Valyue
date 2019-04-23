@@ -11,8 +11,17 @@ input_args_temperature_no_errcode = {'minimum': '-40', 'maximum': '165',
                           'resolution': 0.0078125, 'bitwidth': 16, 'offset': '-40',
                           'errorcodes': {}}
 
-input_args_voltage = {'minimum': '0', 'maximum': '40.75',
-                      'resolution': '0.16', 'bitwidth': 8, 'offset': '0'}
+# input_args_voltage = {'minimum': '0', 'maximum': '40.75',
+#                       'resolution': '0.16', 'bitwidth': 8, 'offset': '0'}
+
+input_args_voltage = """
+                <signaldefinition alt_name="Supply Voltage" name="Supply Voltage">
+                    <encoding bitsize="8" lsn="0" msn="1" reversed="0"/>
+                    <physical minimum="0" maximum="40.75" offset="0" factor="6.25" unit="V" format=".2f">
+                    </physical>
+                    <default>0</default>
+                </signaldefinition>
+"""
 
 input_args_level = {'minimum': '0', 'maximum': '600',
                     'resolution': 0.01, 'bitwidth': 16, 'offset': '0',
@@ -132,24 +141,24 @@ def test_spec_conti_level_validate_phy():
     assert obj_level.validate_phy_value(770.75) == (65530, 'ERROR')
 
 
-@pytest.mark.skip("Conti specification deviates too much from the J2716 Specification")
+# @pytest.mark.skip("Conti specification deviates too much from the J2716 Specification")
 def test_spec_conti_voltage_init():
     """Test the initialized object attributes."""
-    obj_voltage = spec_conti(**input_args_voltage)
+    obj_voltage = Physical.from_xml(input_args_voltage, 8)
 
     assert obj_voltage.x1 == 0
     assert obj_voltage.x2 == 40.75
-    assert obj_voltage.y1 == 1
-    assert obj_voltage.y2 == 247.96969696969697
-    assert obj_voltage.low_clamp == 1
-    assert obj_voltage.high_clamp == 248
+    assert obj_voltage.y1 == 0
+    assert obj_voltage.y2 == 255
+    assert obj_voltage.low_clamp == 0
+    assert obj_voltage.high_clamp == 255
     assert obj_voltage.max_raw == 255
 
 
-@pytest.mark.skip("Conti specification deviates too much from the J2716 Specification")
+# @pytest.mark.skip("Conti specification deviates too much from the J2716 Specification")
 def test_spec_conti_voltage_validate_raw():
     """validate_raw_value() considers hexadecimal and binary value as RAW and status as WARN / ERR."""
-    obj_voltage = spec_conti(**input_args_voltage)
+    obj_voltage = Physical.from_xml(input_args_voltage, 8)
 
     assert obj_voltage.validate_raw_value(0xA) == (10, 'WARNING')
     assert obj_voltage.validate_raw_value(0xAB) == (171, 'WARNING')
@@ -159,16 +168,16 @@ def test_spec_conti_voltage_validate_raw():
     assert obj_voltage.validate_raw_value(0b100000010) == (0, 'ERROR') # 258
 
 
-@pytest.mark.skip("Conti specification deviates too much from the J2716 Specification")
+#@pytest.mark.skip("Conti specification deviates too much from the J2716 Specification")
 def test_spec_conti_voltage_validate_phy():
     """
     validate_phy_value() considers Integer or Float value as physical input and returns RAW value and status
     according to JAE2716 specification.
     """
-    obj_voltage = spec_conti(**input_args_voltage)
+    obj_voltage = Physical.from_xml(input_args_voltage, 8)
 
-    assert obj_voltage.validate_phy_value(0) == (1, 'OK')
-    assert obj_voltage.validate_phy_value(-0.01) == (1, 'ERROR')
+    assert obj_voltage.validate_phy_value(0) == (0, 'OK')
+    assert obj_voltage.validate_phy_value(-0.01) == (0, 'ERROR')
     assert obj_voltage.validate_phy_value(5.96) == (37, 'OK')
     assert obj_voltage.validate_phy_value(35.96) == (218, 'OK')
     assert obj_voltage.validate_phy_value(40.75) == (247, 'OK')
@@ -204,7 +213,7 @@ def test_spec_conti_amplitude_init():
 
 def test_spec_conti_amplitude_validate_raw():
     """validate_raw_value() considers hexadecimal and binary value as RAW and status as WARN / ERR."""
-    obj_amplitude = Physical.from_xml(input_args_amplitude, 16)
+    obj_amplitude = Physical.from_xml(input_args_amplitude, 8)
 
     assert obj_amplitude.validate_raw_value(0xA) == (10, 'WARNING')
     assert obj_amplitude.validate_raw_value(0xAB) == (171, 'WARNING')
@@ -219,21 +228,11 @@ def test_spec_conti_amplitude_validate_phy():
     validate_phy_value() considers Integer or Float value as physical input and returns RAW value and status
     according to JAE2716 specification.
     """
-    obj_amplitude = Physical.from_xml(input_args_amplitude, 16)
+    obj_amplitude = Physical.from_xml(input_args_amplitude, 8)
 
-    assert obj_amplitude.validate_phy_value(0) == (1, 'OK')
-    assert obj_amplitude.validate_phy_value(-2) == (1, 'ERROR')
-    assert obj_amplitude.validate_phy_value(24.7) == (248, 'OK')
-    assert obj_amplitude.validate_phy_value(25.1) == (248, 'ERROR')
-    assert obj_amplitude.validate_phy_value(45.75) == (248, 'ERROR')
+    assert obj_amplitude.validate_phy_value(0) == (0, 'OK')
+    assert obj_amplitude.validate_phy_value(-2) == (0, 'ERROR')
+    assert obj_amplitude.validate_phy_value(24.7) == (247, 'OK')
+    assert obj_amplitude.validate_phy_value(25.1) == (247, 'ERROR')
+    assert obj_amplitude.validate_phy_value(45.75) == (247, 'ERROR')
 
-
-def test_spec_conti_amplitude_validate_reserved():
-    """reserved_value() checks 8 reserved RAW values and returns the respective indicator message."""
-    obj_amplitude = Physical.from_xml(input_args_amplitude, 16)
-
-    assert obj_amplitude.reserved_value(0) == 'IM_0'
-    assert obj_amplitude.reserved_value(255) == 'IM_1'
-    assert obj_amplitude.reserved_value(254) == 'IM_2'
-    assert obj_amplitude.reserved_value(252) == 'IM_4'
-    assert obj_amplitude.reserved_value(249) == 'IM_7'

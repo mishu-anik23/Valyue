@@ -3,7 +3,7 @@ from collections import OrderedDict as OD
 from parsexml import *
 
 def valid_frames_from_xml():
-    xml_file_path = os.path.join(os.getcwd(), "sigempty.xml")
+    xml_file_path = os.path.join(os.getcwd(), "signaldefinition.xml")
     sig_conf = read_sigdef(xml_file_path)
     frames = []
     for fc in range(16):
@@ -30,8 +30,9 @@ class SignalFrame(Frame):
 
         self.sigrows = OD([])
         self._create_button_widget((len(self.sigrows) + 1) * 2)
-        self._create_column_heading_signal_name(heading_text="Signal Name 1", column=0)
-        self._create_column_heading_signal_name(heading_text="Signal Name 2", column=3)
+        self._create_column_heading_signal_frame(column=0)
+        self._create_column_heading_signal_name(heading_text="Signal Name 1", column=1)
+        self._create_column_heading_signal_name(heading_text="Signal Name 2", column=4)
         self._create_column_heading_signal_widgets()
 
     def commit(self, dummy=None):
@@ -44,7 +45,7 @@ class SignalFrame(Frame):
 
     def _create_button_widget(self, row):
         self.b_update = Button(self, text="Update", command=self.commit, state=NORMAL)
-        self.b_update.grid(row=row, column=12, sticky='NE', padx=7)
+        self.b_update.grid(row=row, column=13, sticky='NE', padx=7)
 
     def get_values(self):
         lst = [row_obj.get_user_value() for row_obj in self.sigrows]
@@ -71,6 +72,10 @@ class SignalFrame(Frame):
             lbl = Label(self, text=element, bg=COLUMN_COLOR_LIST[column], font='Helvetica 9 bold')
             lbl.grid(row=1, column=column + index, sticky=W + E)
 
+    def _create_column_heading_signal_frame(self, column):
+        lbl_column_sigframe = Label(self, text="#", bg=COLUMN_COLOR_LIST[column], font='Helvetica 11 bold')
+        lbl_column_sigframe.grid(row=0, column=column)
+
     def _create_column_heading_signal_widgets(self):
         """
         Create the heading of column to display the respective widgets for signal 1 & 2 and also to display the headings of
@@ -80,7 +85,7 @@ class SignalFrame(Frame):
         """
         column_headings_sig_widgets = ["Measured Value 1", "User Value 1", "Measured Value 2", "User Value 2",
                                        "Gateway", "Signal Active"]
-        start_index = 6
+        start_index = 7
         for col, label in enumerate(column_headings_sig_widgets, start_index):
             heading_sig_widgets = Label(self, text=label, bg=COLUMN_COLOR_LIST[col], font='Helvetica 11 bold')
             empty_lbl = Label(self, text="", bg=COLUMN_COLOR_LIST[col], width=24)
