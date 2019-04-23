@@ -11,8 +11,9 @@ from xml.etree import cElementTree as ET
 from signalrow_valid import *
 
 
-SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit', 'validate',
-                                             'indicate', 'default', 'format', 'frame', 'bitwidth', 'isbitfield'])
+SignalDetails = namedtuple('SignalDetails', ['name', 'minimum', 'maximum', 'unit', 'validate','indicate',
+                                             'default', 'format', 'frame_number', 'bitwidth', 'isbitfield'])
+
 
 def intorfloat(x):
     """Convert string input to int if possible, otherwise try converting to float

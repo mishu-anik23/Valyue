@@ -1,16 +1,9 @@
 from signaldef import *
+from collections import OrderedDict as OD
 from parsexml import *
 
-sig_obj1 = SignalDefinition(name="Temperature_Bosch", minimum="-40.15", maximum="130.10",
-                                                   unit="°C", default="25.99", frame_number='1',
-                                                   physical=Physical(x1=-40.15, x2=130.10, y1=264, y2=1626,
-                                                                     bitwidth=12, format='.3f'))
-sig_obj2 = SignalDefinition(name="Differential Air Pressure", minimum="-16", maximum="2",
-                                                   unit="KiloPascal", default="-17.99876543", frame_number='1',
-                                                   physical=Physical(x1=-16, x2=2, y1=193, y2=3896, bitwidth=12, format='.2f'))
-
 def valid_frames_from_xml():
-    xml_file_path = os.path.join(os.getcwd(), "signaldefinition.xml")
+    xml_file_path = os.path.join(os.getcwd(), "sigempty.xml")
     sig_conf = read_sigdef(xml_file_path)
     frames = []
     for fc in range(16):
@@ -35,16 +28,7 @@ class SignalFrame(Frame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
-        self.sigrows = []
-
-        # TODO: do not create rows here, use separate method "add_row"
-        # TODO: do not use SignalDefinition objects but signal_details
-        # row = SignalRow(self, row=2,
-        #                 signal_details=(sig_obj1.get_signal_details(), sig_obj2.get_signal_details()))
-        #
-        # self.sigrows.append(row)
-        for signal_details in signal_details_from_frames():
-            self.add_signal_row(((len(self.sigrows) + 1) * 2), signal_details)
+        self.sigrows = OD([])
         self._create_button_widget((len(self.sigrows) + 1) * 2)
         self._create_column_heading_signal_name(heading_text="Signal Name 1", column=0)
         self._create_column_heading_signal_name(heading_text="Signal Name 2", column=3)
@@ -54,9 +38,9 @@ class SignalFrame(Frame):
         for row_obj in self.sigrows:
             row_obj.commit()
 
-    def add_signal_row(self, row_pos, signal_details):
-            sigrow = SignalRow(self, row=row_pos, signal_details=signal_details)
-            self.sigrows.append(sigrow)
+    def add_signal_row(self, signal_details):
+        sigrow = SignalRow(self, row=((len(self.sigrows) + 1) * 2), signal_details=signal_details)
+        self.sigrows[signal_details[0].frame_number] = sigrow
 
     def _create_button_widget(self, row):
         self.b_update = Button(self, text="Update", command=self.commit, state=NORMAL)
@@ -108,4 +92,6 @@ if __name__ == '__main__':
     root = Tk()
     sigframe = SignalFrame(master=root)
     sigframe.grid()
+    for signal_details in signal_details_from_frames():
+        sigframe.add_signal_row(signal_details)
     root.mainloop()
