@@ -1,0 +1,83 @@
+"""
+Outline for functions for decoding nibbles to raw values
+and encoding raw values to nibbles
+
+Nibbles are always represented by a sequence of 8 bytes (i.e. the upper four bits must be ignored).
+Nibbles are always counted from 0 to 7, and LSN and MSN always shall use this numbering. (That means, normally
+MSN and LSN are in the interval from 1 through 6, because nibbles 0 and 7 are not used for signal data.)
+
+The standard ordering of bits is to have the least significant bit in the last place (rightmost); the same
+principle applies to nibbles, i.e. 0x123 is represented by the sequence [1, 2, 3] in the standard nibble order.
+Hence, if LSN < MSN, the nibble order is reversed, and 0x123 would become [3, 2, 1].
+
+If half-nibbles are used, e.g. bitwidth == 10, then it is always the LSN where only 2 bits are used. Therefore,
+0x123 as a 10-bit number will become the sequence [ 4, 8, 0xC] in standard nibble order and [ 3, 8, 4] in reversed
+nibble order.
+
+According to SAE J-2716, signals have at least 8 bits and at most 24 bits, hence our tests must cover all even
+bitwidths in that range.  Also the signals may start at any nibble >= 1, so all possible positions in the 6 data
+nibbles must be covered.
+
+SAE-J2716 specifies that the second signal (if present) will be in reversed order, so that half-nibbles
+"""
+
+
+def encode(raw_value, bitwidth):
+    nibbles = []
+    if raw_value > (1 << bitwidth) - 1:
+        raise ValueError("Given value doesn't fit the bitwidth")
+    while bitwidth:
+        nibble = raw_value & 0xF
+        nibbles.append(nibble)
+        raw_value >>= 4
+        bitwidth -= 4
+    return list(reversed(nibbles))
+
+
+def encode_frame(nibbles, msn=0, lsn=0):
+    """
+    Converts an integer raw value to a sequence of nibbles.
+
+    :param raw_value: integer (must fit in bitwidth)
+    :param msn: nibble index
+    :param lsn: nibble index
+    :param bitwidth: integer
+    :return: sequence of 8 integers in the range from 0 through 15; bits not occupied by the eoncoded raw value must be zero.
+    """
+    byte_array = [0] * 8
+    # sequence of length 8; unused bits shall be set to 0
+    byte_array[msn:lsn+1] = nibbles
+    return byte_array
+
+
+
+# def decode(nibbles, msn=None, lsn=None, bitwidth=None):
+#     """
+#     Converts a sequence of nibbles to an integer raw value
+#     :param nibbles:
+#     :param msn: nibble index
+#     :param lsn: nibble index
+#     :param bitwidth: integer
+#     :return: integer raw value
+#     """
+#     raw_value = 0
+#     for index, nibble in enumerate(reversed(nibbles)):
+#         data = nibble & 0xF
+#         raw_value = raw_value | data << index * 4
+#     return raw_value
+
+
+def decode(nibbles, bitwidth=0, msn=0, lsn=0):
+    result = 0
+    nibbles = nibbles[msn:lsn + 1]
+
+    for n in nibbles:
+        result <<= 4
+        result += n & 0xF
+    if bitwidth % 4 == 2:
+        result >>= 2
+    return result
+
+
+if __name__ == '__main__':
+    print(decode(bytes([0, 8, 7, 0, 7, 0, 0, 0]),16))
