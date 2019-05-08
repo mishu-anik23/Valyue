@@ -23,8 +23,6 @@ SAE-J2716 specifies that the second signal (if present) will be in reversed orde
 
 
 def encode(raw_value, bitwidth):
-<<<<<<< HEAD
-=======
     nibbles = []
     if raw_value > (1 << bitwidth) - 1:
         raise ValueError("Given value doesn't fit the bitwidth")
@@ -36,27 +34,6 @@ def encode(raw_value, bitwidth):
     return list(reversed(nibbles))
 
 
-def encode_frame(nibbles, msn=0, lsn=0):
->>>>>>> 4769a87b9cad7a3039fdcfe85eca13cb0bbd78ee
-    """
-    Converts an integer raw value to a sequence of nibbles.
-
-    :param raw_value: integer (must fit in bitwidth)
-    :param msn: nibble index
-    :param lsn: nibble index
-    :param bitwidth: integer
-    :return: sequence of 8 integers in the range from 0 through 15; bits not occupied by the eoncoded raw value must be zero.
-    """
-<<<<<<< HEAD
-    nibbles = []
-    while bitwidth:
-        nibble = raw_value & 0xf
-        nibbles.append(nibble)
-        raw_value >>= 4
-        bitwidth -= 4
-    return nibbles  # sequence of length 8; unused bits shall be set to 0
-
-
 def encode_frame(raw_value, bitwidth=0, msn=0, lsn=0):
     frame = [0] * 8
     if bitwidth % 4 == 2:
@@ -65,9 +42,11 @@ def encode_frame(raw_value, bitwidth=0, msn=0, lsn=0):
         for n in range(msn,lsn+1):
             nibbles.append(raw_value & 0xF)
             raw_value >>= 4
+        nibbles = list(reversed(nibbles))
     else:
         nibbles = encode(raw_value, bitwidth)
-    frame[msn:lsn+1] = list(reversed(nibbles))
+
+    frame[msn:lsn+1] = nibbles
     return frame
 
 
@@ -88,50 +67,3 @@ def decode(nibbles, bitwidth=0, msn=0, lsn=0):
         raw_value >>= 2
     return raw_value
 
-
-
-if __name__ == '__main__':
-    print(encode(291, 16))
-    input = bytes([0, 1, 2, 3, 4, 2, 1, 0xF])
-    print(decode(input, 10, 1, 3))
-    print(encode_frame(raw_value=0x227, bitwidth=10, msn=1, lsn=3))
-    print(encode_frame(raw_value=0xEB, bitwidth=10, msn=1, lsn=3))
-=======
-    byte_array = [0] * 8
-    # sequence of length 8; unused bits shall be set to 0
-    byte_array[msn:lsn+1] = nibbles
-    return byte_array
-
-
-
-# def decode(nibbles, msn=None, lsn=None, bitwidth=None):
-#     """
-#     Converts a sequence of nibbles to an integer raw value
-#     :param nibbles:
-#     :param msn: nibble index
-#     :param lsn: nibble index
-#     :param bitwidth: integer
-#     :return: integer raw value
-#     """
-#     raw_value = 0
-#     for index, nibble in enumerate(reversed(nibbles)):
-#         data = nibble & 0xF
-#         raw_value = raw_value | data << index * 4
-#     return raw_value
-
-
-def decode(nibbles, bitwidth=0, msn=0, lsn=0):
-    result = 0
-    nibbles = nibbles[msn:lsn + 1]
-
-    for n in nibbles:
-        result <<= 4
-        result += n & 0xF
-    if bitwidth % 4 == 2:
-        result >>= 2
-    return result
-
-
-if __name__ == '__main__':
-    print(decode(bytes([0, 8, 7, 0, 7, 0, 0, 0]),16))
->>>>>>> 4769a87b9cad7a3039fdcfe85eca13cb0bbd78ee
