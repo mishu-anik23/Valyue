@@ -1,5 +1,7 @@
+import os
 from enum import Enum
 from tkinter import *
+from PIL import ImageTk, Image
 
 COLUMN_COLOR_LIST = [
     None,
@@ -94,7 +96,8 @@ class SignalRow:
         (self.signal1_details, self.signal2_details) = signal_details
 
         if self.signal1_details.isbitfield:
-            BitArray(master, self.signal1_details.bitwidth, self.signal1_details.default).grid(row=self.row, column=7)
+            # BitArray(master, self.signal1_details.bitwidth, self.signal1_details.default).grid(row=self.row, column=7)
+            BitLabel(master, self.signal1_details.bitwidth, self.signal1_details.default).grid(row=self.row, column=7)
         else:
             self._create_entry_measured_value(master, initval_sig1='', initval_sig2='')
             self._create_entry_user_value(master)
@@ -305,6 +308,43 @@ class BitArray(Frame):
             ret_num <<= 1
             ret_num = ret_num | bit
         return ret_num
+
+
+def select_image():
+    img_pth = os.path.join(os.getcwd(), "Start-icon.png")
+    img = Image.open(img_pth)
+    img = img.resize((7,10), Image.ANTIALIAS)
+    photoimg = ImageTk.PhotoImage(img)
+    return photoimg
+
+
+def deselect_image():
+    img_pth = os.path.join(os.getcwd(), "Stop-red-icon.png")
+    img = Image.open(img_pth)
+    img = img.resize((7,10), Image.ANTIALIAS)
+    photoimg = ImageTk.PhotoImage(img)
+    return photoimg
+
+
+class BitLabel(Frame):
+    def __init__(self, master, bitwidth, value, **kwargs):
+        super().__init__(master)
+        self.bitwidth = bitwidth
+        self.set_value(value)
+
+    def set_value(self, value):
+        for i in range(self.bitwidth):
+            if value & 1:
+                select_img = select_image()
+                bitlabel = Label(self, image=select_img)
+                bitlabel.select_img = select_img
+                bitlabel.grid(row=0, column=i)
+            else:
+                deselect_img = deselect_image()
+                bitlabel = Label(self, image=deselect_img)
+                bitlabel.deselect_img = deselect_img
+                bitlabel.grid(row=0, column=i)
+            value >>= 1
 
 
 

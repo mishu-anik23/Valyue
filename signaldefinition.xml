@@ -275,7 +275,7 @@
                 <signaldefinition alt_name="Status and Error flags" name="Status and Error flags">
                     <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
                     <isbitfield/>
-                    <default>234</default>
+                    <default>56890</default>
                 </signaldefinition>
             </frame>
             <frame>
@@ -284,7 +284,7 @@
                 <signaldefinition alt_name="Optional" name="Optional">
                     <encoding bitsize="16" lsn="0" msn="3" reversed="0"/>
                     <isbitfield/>
-                    <default>3456</default>
+                    <default>2947</default>
                 </signaldefinition>
             </frame>
             <serialchannel>

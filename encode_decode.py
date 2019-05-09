@@ -20,33 +20,29 @@ nibbles must be covered.
 
 SAE-J2716 specifies that the second signal (if present) will be in reversed order, so that half-nibbles
 """
+from collections import namedtuple
 
 
 def encode(raw_value, bitwidth):
     nibbles = []
-    if raw_value > (1 << bitwidth) - 1:
+    if raw_value >= (1 << bitwidth):
         raise ValueError("Given value doesn't fit the bitwidth")
-    while bitwidth:
-        nibble = raw_value & 0xF
-        nibbles.append(nibble)
+    if bitwidth % 4 == 2:
+        raw_value <<= 2
+        # shifting left by 2 bits means 2 more bits to encode :
+        bitwidth += 2
+    for n in range(bitwidth // 4):
+        nibbles.append(raw_value & 0xF)
         raw_value >>= 4
-        bitwidth -= 4
     return list(reversed(nibbles))
 
 
-def encode_frame(raw_value, bitwidth=0, msn=0, lsn=0):
-    frame = [0] * 8
-    if bitwidth % 4 == 2:
-        raw_value <<= 2
-        nibbles = []
-        for n in range(msn,lsn+1):
-            nibbles.append(raw_value & 0xF)
-            raw_value >>= 4
-        nibbles = list(reversed(nibbles))
-    else:
-        nibbles = encode(raw_value, bitwidth)
+NibbleData = namedtuple('NibbleData', ['nibbles', 'bitwidth', 'msn', 'lsn'])
 
-    frame[msn:lsn+1] = nibbles
+
+def encode_frame(nibble_data_1, nibble_data_2=None):
+    frame = [0] * 8
+    frame[nibble_data_1.msn:nibble_data_1.lsn+1] = nibble_data_1.nibbles
     return frame
 
 
