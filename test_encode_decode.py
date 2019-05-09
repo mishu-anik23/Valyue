@@ -7,18 +7,6 @@ def test_encode_16bit_no_zero_padding():
     assert encode(raw_value=0x8707, bitwidth=16) == expected_nibble
 
 
-def test_encode_frame_16bit_1():
-    assert encode_frame(raw_value=0x8707, bitwidth=16, msn=1, lsn=4) == [0, 8, 7, 0, 7, 0, 0, 0]
-
-
-def test_encode_frame_16bit_2():
-    assert encode_frame(raw_value=0x8707, bitwidth=16, msn=2, lsn=5) == [0, 0, 8, 7, 0, 7, 0, 0]
-
-
-def test_encode_frame_16bit_3():
-    assert encode_frame(raw_value=0x8707, bitwidth=16, msn=3, lsn=6) == [0, 0, 0, 8, 7, 0, 7, 0]
-
-
 def test_encode_16bit_one_zero_padding():
     raw_value_in = 0x123    # 291
     bitwidth_in = 16
@@ -52,15 +40,93 @@ def test_encode_12bit_two_zero_padding():
     assert encode(raw_value=0x7, bitwidth=12) == [0, 0, 7]    # 7
 
 
+# Testing Encoding for shared Nibbles start here :
+
+def test_encode_10bit_1():
+    assert encode(raw_value=0x048, bitwidth=10) == [1, 2, 0]
+
+
+def test_encode_10bit_2():
+    assert encode(raw_value=0x08D, bitwidth=10) == [2, 3, 4]
+
+
+def test_encode_10bit_3():
+    assert encode(raw_value=0xEB, bitwidth=10) == [3, 0xA, 0xC]
+
+
+def test_encode_10bit_4():
+    assert encode(raw_value=0x227, bitwidth=10) == [8, 9, 0xC]
+
+
+def test_encode_10bit_5():
+    assert encode(raw_value=0x3CC, bitwidth=10) == [0xF, 3, 0]
+
+
+def test_encode_10bit_6():
+    assert encode(raw_value=0x0F6, bitwidth=10) == [3, 13, 8]
+
+
+def test_encode_14bit_1():
+    assert encode(raw_value=0x48D, bitwidth=14) == [1, 2, 3, 4]
+
+
+def test_encode_14bit_2():
+    assert encode(raw_value=0x3697, bitwidth=14) == [0xD, 0xA, 5, 0xC]
+
+
+def test_encode_14bit_3():
+    assert encode(raw_value=0x21FE, bitwidth=14) == [8, 7, 15, 8]
+
+
+def test_encode_14bit_4():
+    assert encode(raw_value=0x1ECF, bitwidth=14) == [7, 0xB, 3, 0xC]
+
+
+def test_encode_14bit_5():
+    assert encode(raw_value=0x0609, bitwidth=14) == [1, 8, 2, 4]
+
+
+def test_encode_14bit_6():
+    assert encode(raw_value=0x313A, bitwidth=14) == [0xC, 4, 0xE, 8]
+
+
+# Test for ValueError for unfit Bitwidth :
+
+
 def test_encode_bitwidth_exceed():
     with pytest.raises(ValueError) as exc:
         encode(raw_value=0x15F4, bitwidth=8)   # 5620
         assert "doesn't fit bitwidth" in str(exc)
 
 
+def test_encode_frame_10bit_1():
+    data_1_in = NibbleData(nibbles=[1, 2, 0], bitwidth=10, msn=1, lsn=3)
+    assert encode_frame(nibble_data_1=data_1_in) == [0, 1, 2, 0, 0, 0, 0, 0 ]
+
+
+def test_encode_frame_10bit_2():
+    data_1_in = NibbleData(nibbles=[2, 3, 4], bitwidth=10, msn=1, lsn=3)
+    assert encode_frame(nibble_data_1=data_1_in) == [0, 2, 3, 4, 0, 0, 0, 0]
+
+
+
+
+
+# Testing Decode starts here :
+
 def test_decode_16bit_1():
     nibble_in = bytes([0, 8, 7, 0, 7, 0, 0, 0])
     assert decode(nibble_in, bitwidth=16, msn=1, lsn=4) == 0x8707
+
+
+def test_decode_16bit_2():
+    nibbles_in = bytes([0, 3, 0xA, 0xE, 4, 2, 1, 0xF ])
+    assert decode(nibbles_in, msn=1, lsn=4) == 0x3AE4
+
+
+def test_decode_16bit_3():
+    nibble_in = bytes([0, 1, 2, 3, 4, 5, 6, 0])
+    assert decode(nibble_in, bitwidth=16, msn=3, lsn=6) == 0x3456
 
 
 def test_decode_16bit_two_zero_padding():
@@ -68,11 +134,11 @@ def test_decode_16bit_two_zero_padding():
     assert decode(nibble_in, bitwidth=16, msn=1, lsn=4) == 76
 
 
-def test_decode16bit_two_zeroes_1():
+def test_decode_16bit_two_zeroes_1():
     assert decode([0, 0, 1, 2, 3, 0, 0, 0], bitwidth=16, msn=1, lsn=4) == 0x123
 
 
-def test_decode16bit_two_zeroes_2():
+def test_decode_16bit_two_zeroes_2():
     assert decode([0, 0, 0, 2, 3, 0, 0, 0], bitwidth=16, msn=1, lsn=4) == 0x23
 
 
@@ -100,23 +166,16 @@ def test_decode_12bit_4():
     assert decode(nibble_in, bitwidth=12, msn=3, lsn=5) == 0x670
 
 
-def test_decode_16bit_5():
-    nibble_in = bytes([0, 1, 2, 3, 4, 5, 6, 0])
-    assert decode(nibble_in, bitwidth=16, msn=3, lsn=6) == 0x3456
-
-
-def test_decode16bit_1():
-    nibbles_in = bytes([0, 3, 0xA, 0xE, 4, 2, 1, 0xF ])
-    assert decode(nibbles_in, msn=1, lsn=4) == 0x3AE4
-
-
-def test_decode12bit_1():
+def test_decode_12bit_5():
     nibbles_in = bytes([0, 3, 0xA, 0xE, 4, 2, 1, 0xF ])
     assert decode(nibbles_in, msn=2, lsn=4) == 0xAE4
 
-def test_decode8bit_1():
+
+def test_decode_8bit_1():
     nibbles_in = bytes([0, 3, 0xA, 0xE, 4, 2, 1, 0xF ])
     assert decode(nibbles_in, msn=2, lsn=3) == 0xAE
+
+# Test Cases for shared Nibbles start here :
 
 
 def test_decode_10bit_1():
@@ -124,34 +183,17 @@ def test_decode_10bit_1():
     assert decode(nibbles_in, bitwidth=10, msn=1, lsn=3) == 0x048
 
 
-def test_encode_10bit_1():
-    assert encode_frame(nibble_data_1=NibbleData(nibbles=[0, 1, 2, 0],
-                                                 bitwidth=10, msn=1, lsn=3) == [0, 1, 2, 0, 0, 0, 0, 0 ])
-
-
 def test_decode_10bit_2():
     nibbles_in = bytes([0, 1, 2, 3, 4, 2, 1, 0xF ])
     assert decode(nibbles_in, bitwidth=10, msn=2, lsn=4) == 0x08D
-
-
-def test_encode_10bit_2():
-    assert encode_frame(raw_value=0x08D, bitwidth=10, msn=2, lsn=4) == [0, 2, 3, 4, 0, 0, 0, 0]
 
 
 def test_decode_10bit_3():
     assert decode(nibbles=[0, 3, 0xA, 0xE, 0, 0, 0, 0], bitwidth=10, msn=1, lsn=3) == 0xEB
 
 
-def test_encode_10bit_3():
-    assert encode_frame(raw_value=0xEB, bitwidth=10, msn=1, lsn=3) == [0, 3, 0xA, 0xC, 0, 0, 0, 0]
-
-
 def test_decode_10bit_4():
     assert decode(nibbles=[0, 8, 9, 0xD, 0, 0, 0, 0], bitwidth=10, msn=1, lsn=3) == 0x227
-
-
-def test_encode_10bit_4():
-    assert encode_frame(raw_value=0x227, bitwidth=10, msn=1, lsn=3) == [0, 8, 9, 0xC, 0, 0, 0, 0]
 
 
 def test_decode_10bit_5():
@@ -159,17 +201,9 @@ def test_decode_10bit_5():
     assert decode(nibble_in, bitwidth=10, msn=1, lsn=3) == 0x3CC
 
 
-def test_encode_10bit_5():
-    assert encode_frame(raw_value=0x3CC, bitwidth=10, msn=1, lsn=3) == [0, 0xF, 3, 0, 0, 0, 0, 0]
-
-
 def test_decode_10bit_6():
     nibble_in = bytes([0, 3, 13, 8, 4, 5, 6, 0])
     assert decode(nibble_in, bitwidth=10, msn=1, lsn=3) == 0x0F6
-
-
-def test_encode_10bit_6():
-    assert encode_frame(raw_value=0x0F6, bitwidth=10, msn=1, lsn=3) == [0, 3, 13, 8, 0, 0, 0, 0]
 
 
 def test_decode_14bit_1():
@@ -196,32 +230,7 @@ def test_decode_14bit_6():
     assert decode(nibbles=[0, 0xC, 4, 0xE, 9, 0, 0, 0], bitwidth=14, msn=1, lsn=4) == 0x313A
 
 
-def test_encode_14bit_1():
-    assert encode_frame(raw_value=0x48D, bitwidth=14, msn=1, lsn=4) == [0, 1, 2, 3, 4, 0, 0, 0]
 
-
-def test_encode_14bit_2():
-    assert encode_frame(raw_value=0x3697, bitwidth=14, msn=1, lsn=4) == [0, 0xD, 0xA, 5, 0xC, 0, 0, 0]
-
-
-def test_encode_14bit_3():
-    assert encode_frame(raw_value=0x21FE, bitwidth=14, msn=1, lsn=4) == [0, 8, 7, 15, 8, 0, 0, 0]
-
-
-def test_encode_14bit_4():
-    assert encode_frame(raw_value=0x1ECF, bitwidth=14, msn=1, lsn=4) == [0, 7, 0xB, 3, 0xC, 0, 0, 0]
-
-
-def test_encode_14bit_5():
-    assert encode_frame(raw_value=0x0609, bitwidth=14, msn=1, lsn=4) == [0, 1, 8, 2, 4, 0, 0, 0]
-
-
-def test_encode_14bit_6():
-    assert encode_frame(raw_value=0x313A, bitwidth=14, msn=1, lsn=4) == [0, 0xC, 4, 0xE, 8, 0, 0, 0]
-
-
-def test_encode_frame_12bit_1():
-    assert encode_frame(raw_value=0x3AE, bitwidth=12, msn=1, lsn=3) == [0, 3, 0xA, 0xE, 0, 0, 0, 0]
 
 
 

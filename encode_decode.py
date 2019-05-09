@@ -40,8 +40,9 @@ def encode(raw_value, bitwidth):
 NibbleData = namedtuple('NibbleData', ['nibbles', 'bitwidth', 'msn', 'lsn'])
 
 
-def encode_frame(nibble_data_1, nibble_data_2=None):
+def encode_frame(nibble_data_1, nibble_data_2=0):
     frame = [0] * 8
+    print(nibble_data_1.nibbles)
     frame[nibble_data_1.msn:nibble_data_1.lsn+1] = nibble_data_1.nibbles
     return frame
 
@@ -62,4 +63,11 @@ def decode(nibbles, bitwidth=0, msn=0, lsn=0):
     if bitwidth % 4 == 2:
         raw_value >>= 2
     return raw_value
+
+
+if __name__ == '__main__':
+     f = encode_frame(nibble_data_1=NibbleData(nibbles=[0, 1, 2, 0],
+                                          bitwidth=10, msn=1, lsn=3))
+     print(f)
+
 
