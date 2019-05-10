@@ -40,10 +40,11 @@ def encode(raw_value, bitwidth):
 NibbleData = namedtuple('NibbleData', ['nibbles', 'bitwidth', 'msn', 'lsn'])
 
 
-def encode_frame(nibble_data_1, nibble_data_2=0):
+def encode_frame(nibble_data_1, nibble_data_2=None):
     frame = [0] * 8
-    print(nibble_data_1.nibbles)
     frame[nibble_data_1.msn:nibble_data_1.lsn+1] = nibble_data_1.nibbles
+    if nibble_data_2 is not None:
+        frame[nibble_data_2.msn:nibble_data_2.lsn+1] = list(reversed(nibble_data_2.nibbles))
     return frame
 
 

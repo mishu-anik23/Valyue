@@ -90,7 +90,7 @@ def test_encode_14bit_6():
     assert encode(raw_value=0x313A, bitwidth=14) == [0xC, 4, 0xE, 8]
 
 
-# Test for ValueError for unfit Bitwidth :
+# Test for ValueError in case of unfit Bitwidth :
 
 
 def test_encode_bitwidth_exceed():
@@ -99,15 +99,61 @@ def test_encode_bitwidth_exceed():
         assert "doesn't fit bitwidth" in str(exc)
 
 
-def test_encode_frame_10bit_1():
+# Test for encoding Nibble Data Frames start here :
+
+    # Test for 1 Signal :
+
+def test_encode_frame_10bit_lonely_signal_1():
     data_1_in = NibbleData(nibbles=[1, 2, 0], bitwidth=10, msn=1, lsn=3)
-    assert encode_frame(nibble_data_1=data_1_in) == [0, 1, 2, 0, 0, 0, 0, 0 ]
+    assert encode_frame(nibble_data_1=data_1_in) == [0, 1, 2, 0, 0, 0, 0, 0]
 
 
-def test_encode_frame_10bit_2():
+def test_encode_frame_10bit_lonely_signal_2():
     data_1_in = NibbleData(nibbles=[2, 3, 4], bitwidth=10, msn=1, lsn=3)
     assert encode_frame(nibble_data_1=data_1_in) == [0, 2, 3, 4, 0, 0, 0, 0]
 
+
+def test_encode_frame_10bit_lonely_signal_3():
+    data_1_in = NibbleData(nibbles=[3, 0xA, 0xC], bitwidth=10, msn=1, lsn=3)
+    assert encode_frame(nibble_data_1=data_1_in) == [0, 3, 0xA, 0xC, 0, 0, 0, 0]
+
+
+def test_encode_frame_10bit_lonely_signal_4():
+    data_1_in = NibbleData(nibbles=[8, 9, 0xC], bitwidth=10, msn=1, lsn=3)
+    assert encode_frame(nibble_data_1=data_1_in) == [0, 8, 9, 0xC, 0, 0, 0, 0]
+
+
+def test_encode_frame_10bit_lonely_signal_5():
+    data_1_in = NibbleData(nibbles=[0xF, 3, 0], bitwidth=10, msn=1, lsn=3)
+    assert encode_frame(nibble_data_1=data_1_in) == [0, 0xF, 3, 0, 0, 0, 0, 0]
+
+
+def test_encode_frame_10bit_lonely_signal_6():
+    data_1_in = NibbleData(nibbles=[3, 13, 8], bitwidth=10, msn=1, lsn=3)
+    assert encode_frame(nibble_data_1=data_1_in) == [0, 3, 13, 8, 0, 0, 0, 0]
+
+    # Test for 2 Signal :
+
+
+def test_encode_frame_10_10_bit_couple_signal_1_3():
+    data_1_in = NibbleData(nibbles=[1, 2, 0], bitwidth=10, msn=1, lsn=3)
+    data_2_in = NibbleData(nibbles=[3, 0xA, 0xC], bitwidth=10, msn=4, lsn=6)
+
+    assert encode_frame(nibble_data_1=data_1_in, nibble_data_2=data_2_in) == [0, 1, 2, 0, 0xC, 0xA, 3, 0]
+
+
+def test_encode_frame_10_10_bit_couple_signal_2_5():
+    data_1_in = NibbleData(nibbles=[2, 3, 4], bitwidth=10, msn=1, lsn=3)
+    data_2_in = NibbleData(nibbles=[0xF, 3, 0], bitwidth=10, msn=4, lsn=6)
+
+    assert encode_frame(nibble_data_1=data_1_in, nibble_data_2=data_2_in) == [0, 2, 3, 4, 0, 3, 0xF, 0]
+
+
+def test_encode_frame_10_10_bit_couple_signal_4_6():
+    data_1_in = NibbleData(nibbles=[8, 9, 0xC], bitwidth=10, msn=1, lsn=3)
+    data_2_in = NibbleData(nibbles=[3, 13, 8], bitwidth=10, msn=4, lsn=6)
+
+    assert encode_frame(nibble_data_1=data_1_in, nibble_data_2=data_2_in) == [0, 8, 9, 0xC, 8, 13, 3, 0]
 
 
 
@@ -175,7 +221,7 @@ def test_decode_8bit_1():
     nibbles_in = bytes([0, 3, 0xA, 0xE, 4, 2, 1, 0xF ])
     assert decode(nibbles_in, msn=2, lsn=3) == 0xAE
 
-# Test Cases for shared Nibbles start here :
+# Test Cases for Decoding shared Nibbles start here :
 
 
 def test_decode_10bit_1():
