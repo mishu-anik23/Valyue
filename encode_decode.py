@@ -42,10 +42,22 @@ NibbleData = namedtuple('NibbleData', ['nibbles', 'bitwidth', 'msn', 'lsn'])
 
 def encode_frame(nibble_data_1, nibble_data_2=None):
     frame = [0] * 8
-    frame[nibble_data_1.msn:nibble_data_1.lsn+1] = nibble_data_1.nibbles
+    df_1 = nibble_data_1.nibbles
+    frame[nibble_data_1.msn:nibble_data_1.lsn+1] = df_1
     if nibble_data_2 is not None:
-        frame[nibble_data_2.msn:nibble_data_2.lsn+1] = list(reversed(nibble_data_2.nibbles))
+        if nibble_data_2.lsn > nibble_data_2.msn:
+            df_2 = nibble_data_2.nibbles
+        else:
+            df_2 = list(reversed(nibble_data_2.nibbles))
+        frame[nibble_data_2.lsn:nibble_data_2.msn+1] = df_2
+        if nibble_data_1.lsn == nibble_data_2.lsn:
+            shared_nibble = construct_shared_nibble(nibble_data_1.nibbles[-1], nibble_data_2.nibbles[-1])
+            frame[nibble_data_1.lsn] = shared_nibble
     return frame
+
+
+def construct_shared_nibble(n1, n2):
+    return n1 & 0xC | (n2 >> 2) & 0x3
 
 
 def decode(nibbles, bitwidth=0, msn=0, lsn=0):
@@ -67,8 +79,13 @@ def decode(nibbles, bitwidth=0, msn=0, lsn=0):
 
 
 if __name__ == '__main__':
-     f = encode_frame(nibble_data_1=NibbleData(nibbles=[0, 1, 2, 0],
-                                          bitwidth=10, msn=1, lsn=3))
-     print(f)
+    nibbles1 = encode(0x123, 10)  # 0x000
+    print(nibbles1)
+    nibbles2 = encode(0x123, 10)  # 0x48C
+    print(nibbles2)
+    nd1 = NibbleData(nibbles1, bitwidth=10, msn=1, lsn=3)
+    nd2 = NibbleData(nibbles2, bitwidth=10, msn=5, lsn=3)
+    f = encode_frame(nd1, nd2)
+    print(f)
 
 
