@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, abort
+from signalgen import *
 
 app = Flask(__name__)
 
@@ -37,6 +38,14 @@ def get_task(task_id):
     if len(task) == 0:
         abort(404)
     return jsonify({'task': task[0]})
+
+
+@app.route('/gentest', methods=['GET'])
+def gentest():
+    sg = signal_generator(min=1, step=0.5, max=10)
+    return jsonify({'genlist': list(sg)})
+#app.add_url_rule('/', 'gentest', gentest)
+
 
 
 if __name__ == '__main__':
