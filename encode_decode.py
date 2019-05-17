@@ -78,14 +78,27 @@ def decode(nibbles, bitwidth=0, msn=0, lsn=0):
     return raw_value
 
 
+def encode_high_speed(raw_value, bitwidth):
+    nibbles = []
+    for n in range((bitwidth // 4) + 1):
+        nibbles.append(raw_value & 0x7)
+        raw_value <<= 1
+        raw_value >>= 4
+    return list(reversed(nibbles))
+
+
+
+
 if __name__ == '__main__':
     nibbles1 = encode(0x123, 10)  # 0x000
-    print(nibbles1)
+    #print(nibbles1)
     nibbles2 = encode(0x123, 10)  # 0x48C
-    print(nibbles2)
+    #print(nibbles2)
     nd1 = NibbleData(nibbles1, bitwidth=10, msn=1, lsn=3)
     nd2 = NibbleData(nibbles2, bitwidth=10, msn=5, lsn=3)
     f = encode_frame(nd1, nd2)
     print(f)
+    print(encode_high_speed(0x123, 12))
+    print(encode_high_speed(0x777, 12))
 
 

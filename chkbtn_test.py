@@ -4,7 +4,7 @@ from PIL import ImageTk, Image
 
 
 def select_image():
-    img_pth = os.path.join(os.getcwd(), "Start-icon.png")
+    img_pth = os.path.join(os.getcwd(), "green.png")
     img = Image.open(img_pth)
     img = img.resize((10,10), Image.ANTIALIAS)
     photoimg = ImageTk.PhotoImage(img)
@@ -12,7 +12,7 @@ def select_image():
 
 
 def deselect_image():
-    img_pth = os.path.join(os.getcwd(), "Stop-red-icon.png")
+    img_pth = os.path.join(os.getcwd(), "red.png")
     img = Image.open(img_pth)
     img = img.resize((10,10), Image.ANTIALIAS)
     photoimg = ImageTk.PhotoImage(img)
@@ -35,9 +35,9 @@ class BitArray(Frame):
     def set_value(self, value):
         for i in range(self.bitwidth):
             if value & 1:
-                self.chkbtns_bitfield[i].select()
-            else:
                 self.chkbtns_bitfield[i].deselect()
+            else:
+                self.chkbtns_bitfield[i].select()
             value >>= 1
 
     def get_value(self):
@@ -59,29 +59,23 @@ class BitLabel(Frame):
         self.select_img = select_image()
         self.deselect_img = deselect_image()
         self.labels_bitfield = []
-        for col in range(bitwidth//4):
-            # lbl_bitfield = Label(self,**kwargs)
-            # # To avoid None type, Geometry mngr should call on created instance in new line :
-            # lbl_bitfield.grid(row=0, column=col)
-            # self.labels_bitfield.append(lbl_bitfield)
-            self._create_label_group((col*4))
-            lbl = Label(self, text="ui")
-            lbl.grid(row=0, column=(col+col*4))
-            self.labels_bitfield.append(lbl)
+        for col in range(bitwidth):
+            lbl_bitfield = Label(self,**kwargs)
+            # To avoid None type, Geometry mngr should call on created instance in new line :
+            lbl_bitfield.grid(row=0, column=col)
+            #self._create_label_group(col*4)
+            if col and not col%4:
+                Label(self).grid(row=0, column=col)
+            self.labels_bitfield.append(lbl_bitfield)
 
         self.set_value(value)
 
     def set_value(self, value):
-        for i in range(self.bitwidth):
+        for bitlabel in self.labels_bitfield:
             if value & 1:
-                self.labels_bitfield[i+1].config(image=self.select_img)
+                 bitlabel.config(image=self.deselect_img)
             else:
-                self.labels_bitfield[i+1].config(image=self.deselect_img)
-        # for bitlabel in self.labels_bitfield:
-        #     if value & 1:
-        #         bitlabel.config(image=self.select_img)
-        #     else:
-        #         bitlabel.config(image=self.deselect_img)
+                 bitlabel.config(image=self.select_img)
             value >>= 1
 
 
@@ -94,8 +88,8 @@ class BitLabel(Frame):
 
 if __name__ == '__main__':
     root = Tk()
-    bitframe = BitArray(master=root, bitwidth=12, value=54239, borderwidth=0)#, highlightthickness=0)
+    bitframe = BitArray(master=root, bitwidth=12, value=423, borderwidth=0)#, highlightthickness=0)
     bitframe.grid()
-    bitlabel = BitLabel(master=root, bitwidth=12, value=54239)
+    bitlabel = BitLabel(master=root, bitwidth=12, value=423)
     bitlabel.grid()
     root.mainloop()

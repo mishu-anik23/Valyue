@@ -96,8 +96,8 @@ class SignalRow:
         (self.signal1_details, self.signal2_details) = signal_details
 
         if self.signal1_details.isbitfield:
-            # BitArray(master, self.signal1_details.bitwidth, self.signal1_details.default).grid(row=self.row, column=7)
-            BitLabel(master, self.signal1_details.bitwidth, self.signal1_details.default).grid(row=self.row, column=7)
+            BitArray(master, self.signal1_details.bitwidth, self.signal1_details.default).grid(row=self.row, column=7)
+            # BitLabel(master, self.signal1_details.bitwidth, self.signal1_details.default).grid(row=self.row, column=7)
         else:
             self._create_entry_measured_value(master, initval_sig1='', initval_sig2='')
             self._create_entry_user_value(master)
@@ -311,7 +311,7 @@ class BitArray(Frame):
 
 
 def select_image():
-    img_pth = os.path.join(os.getcwd(), "Start-icon.png")
+    img_pth = os.path.join(os.getcwd(), "img_1.gif")
     img = Image.open(img_pth)
     img = img.resize((7,10), Image.ANTIALIAS)
     photoimg = ImageTk.PhotoImage(img)
@@ -319,7 +319,7 @@ def select_image():
 
 
 def deselect_image():
-    img_pth = os.path.join(os.getcwd(), "Stop-red-icon.png")
+    img_pth = os.path.join(os.getcwd(), "img_0.gif")
     img = Image.open(img_pth)
     img = img.resize((7,10), Image.ANTIALIAS)
     photoimg = ImageTk.PhotoImage(img)
@@ -330,20 +330,27 @@ class BitLabel(Frame):
     def __init__(self, master, bitwidth, value, **kwargs):
         super().__init__(master)
         self.bitwidth = bitwidth
+        self.bitfield_labels = []
+        for col in range(bitwidth):
+            bitlabel = Label().grid(row=0, column=col)
+            self.bitfield_labels.append(bitlabel)
+
         self.set_value(value)
 
     def set_value(self, value):
         for i in range(self.bitwidth):
             if value & 1:
                 select_img = select_image()
-                bitlabel = Label(self, image=select_img)
-                bitlabel.select_img = select_img
-                bitlabel.grid(row=0, column=i)
+                self.bitfield_labels[i].configure(image=select_img)
+                #bitlabel = Label(self, image=select_img)
+                self.bitfield_labels[i].select_img = select_img
+                #bitlabel.grid(row=0, column=i)
             else:
                 deselect_img = deselect_image()
-                bitlabel = Label(self, image=deselect_img)
-                bitlabel.deselect_img = deselect_img
-                bitlabel.grid(row=0, column=i)
+                #bitlabel = Label(self, image=deselect_img)
+                self.bitfield_labels[i].configure(image=deselect_img)
+                self.bitfield_labels[i].deselect_img = deselect_img
+                #bitlabel.grid(row=0, column=i)
             value >>= 1
 
 

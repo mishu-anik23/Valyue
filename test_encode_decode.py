@@ -90,6 +90,20 @@ def test_encode_14bit_6():
     assert encode(raw_value=0x313A, bitwidth=14) == [0xC, 4, 0xE, 8]
 
 
+# Test for High Speed Encoding start here:
+
+def test_high_speed_encode_12bit_1():
+    assert encode_high_speed(raw_value=0xFFF, bitwidth=12) == [7, 7, 7, 7]
+
+
+def test_high_speed_encode_12bit_2():
+    assert encode_high_speed(raw_value=0x123, bitwidth=12) == [0, 4, 4, 3]
+
+
+def test_high_speed_encode_12bit():
+    assert encode_high_speed(raw_value=0x777, bitwidth=12) == [3, 5, 6, 7]
+
+
 # Test for ValueError in case of unfit Bitwidth :
 
 
