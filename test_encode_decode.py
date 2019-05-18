@@ -117,7 +117,6 @@ def test_high_speed_encode_bitwidth_exceed():
 
 # Test ValueError of normal Encoding in case of unfit Bitwidth :
 
-
 def test_encode_bitwidth_exceed():
     with pytest.raises(ValueError) as exc:
         encode(raw_value=0x15F4, bitwidth=8)   # 5620

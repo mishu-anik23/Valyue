@@ -116,15 +116,20 @@ def get_default(xml_signaldefinition):
 
 class SignalEncoding:
 
-    def __init__(self, bitsize=None):
-        self.bitsize = int(bitsize)
+    def __init__(self, bitwidth=None, nibblewidth=4, msn=None, lsn=None):
+        self.bitwidth = int(bitwidth)
+        self.msn = int(msn)
+        self.lsn = int(lsn)
+        self.nibblewidth = nibblewidth
 
     def __repr__(self):
-        template = "SignalEncoding(bitsize={0.bitsize})"
+        template = "SignalEncoding(bitwidth={0.bitwidth}, 'nibblewidth={0.nibblewidth}, msn={0.msn}, lsn={0.lsn})"
         return template.format(self)
 
     def __eq__(self, other):
-        return self.bitsize == other.bitsize
+        # return self.bitsize == other.bitsize
+        attrs = ['bitwidth', 'nibblewidth', 'msn', 'lsn']
+        return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
     @classmethod
     def from_xml(cls, xml_fragment):
@@ -136,8 +141,41 @@ class SignalEncoding:
         encoding = xml_fragment.find('encoding')
         if encoding is None:
             raise ValueError("XML fragment does not contain an <encoding> tag")
-        return cls(encoding.attrib['bitsize'])
+        return cls(bitwidth=encoding.attrib['bitwidth'],
+                   msn=encoding.attrib['msn'],
+                   lsn=encoding.attrib['lsn'])
 
+    def encode(self, raw_value):
+        mask = (1 << self.nibblewidth) - 1
+        nibbles = []
+        if raw_value >= (1 << self.bitwidth):
+            raise ValueError("Given value doesn't fit the bitwidth")
+        if self.bitwidth % 4 == 2:
+            raw_value <<= 2
+            # shifting left by 2 bits means 2 more bits to encode :
+            self.bitwidth += 2
+        for n in range(self.bitwidth // self.nibblewidth):
+            nibbles.append(raw_value & mask)
+            raw_value >>= self.nibblewidth
+        return list(reversed(nibbles))
+
+    def decode(self, nibbles):
+        """
+        Converts a sequence of nibbles to an integer raw value
+        :param nibbles:
+        :param msn: nibble index
+        :param lsn: nibble index
+        :param bitwidth: integer
+        :return: integer raw value
+        """
+        mask = (1 << self.nibblewidth) - 1
+        raw_value = 0
+        for n in nibbles[self.msn:self.lsn + 1]:
+            raw_value <<= self.nibblewidth
+            raw_value += n & mask
+        if self.bitwidth % 4:
+            raw_value >>= 2
+        return raw_value
 
 class BitField:
     def __init__(self, bitwidth):
