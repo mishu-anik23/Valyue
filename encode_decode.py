@@ -23,7 +23,8 @@ SAE-J2716 specifies that the second signal (if present) will be in reversed orde
 from collections import namedtuple
 
 
-def encode(raw_value, bitwidth):
+def encode(raw_value, bitwidth, nibblewidth=4):
+    mask = (1 << nibblewidth) - 1
     nibbles = []
     if raw_value >= (1 << bitwidth):
         raise ValueError("Given value doesn't fit the bitwidth")
@@ -31,10 +32,11 @@ def encode(raw_value, bitwidth):
         raw_value <<= 2
         # shifting left by 2 bits means 2 more bits to encode :
         bitwidth += 2
-    for n in range(bitwidth // 4):
-        nibbles.append(raw_value & 0xF)
-        raw_value >>= 4
+    for n in range(bitwidth // nibblewidth):
+        nibbles.append(raw_value & mask)
+        raw_value >>= nibblewidth
     return list(reversed(nibbles))
+
 
 
 NibbleData = namedtuple('NibbleData', ['nibbles', 'bitwidth', 'msn', 'lsn'])
@@ -60,7 +62,7 @@ def construct_shared_nibble(n1, n2):
     return n1 & 0xC | (n2 >> 2) & 0x3
 
 
-def decode(nibbles, bitwidth=0, msn=0, lsn=0):
+def decode(nibbles, bitwidth=0, msn=0, lsn=0, nibblewidth=4):
     """
     Converts a sequence of nibbles to an integer raw value
     :param nibbles:
@@ -69,10 +71,11 @@ def decode(nibbles, bitwidth=0, msn=0, lsn=0):
     :param bitwidth: integer
     :return: integer raw value
     """
+    mask = (1 << nibblewidth) - 1
     raw_value = 0
     for n in nibbles[msn:lsn+1]:
-        raw_value <<= 4
-        raw_value += n & 0xF
+        raw_value <<= nibblewidth
+        raw_value += n & mask
     if bitwidth % 4 == 2:
         raw_value >>= 2
     return raw_value

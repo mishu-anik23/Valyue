@@ -4,7 +4,7 @@ from PIL import ImageTk, Image
 
 
 def select_image():
-    img_pth = os.path.join(os.getcwd(), "green.png")
+    img_pth = os.path.join(os.getcwd(), "Start-icon.png")
     img = Image.open(img_pth)
     img = img.resize((10,10), Image.ANTIALIAS)
     photoimg = ImageTk.PhotoImage(img)
@@ -12,7 +12,7 @@ def select_image():
 
 
 def deselect_image():
-    img_pth = os.path.join(os.getcwd(), "red.png")
+    img_pth = os.path.join(os.getcwd(), "Stop-red-icon.png")
     img = Image.open(img_pth)
     img = img.resize((10,10), Image.ANTIALIAS)
     photoimg = ImageTk.PhotoImage(img)
@@ -33,11 +33,11 @@ class BitArray(Frame):
         self.set_value(value)
 
     def set_value(self, value):
-        for i in range(self.bitwidth):
+        for i in reversed(range(self.bitwidth)):
             if value & 1:
-                self.chkbtns_bitfield[i].deselect()
-            else:
                 self.chkbtns_bitfield[i].select()
+            else:
+                self.chkbtns_bitfield[i].deselect()
             value >>= 1
 
     def get_value(self):
@@ -52,44 +52,61 @@ class BitArray(Frame):
         return ret_num
 
 
-class BitLabel(Frame):
+class BitLabel(Label):
+    def __init__(self, master, on_image, off_image, **kwargs):
+        super().__init__(master)
+        self._value = 0
+        self.select_img = on_image
+        self.deselect_img = off_image
+
+    def set_value(self, value):
+        self._value = value
+        if value:
+            self.config(image=self.select_img)
+        else:
+            self.config(image=self.deselect_img)
+
+    def get_value(self):
+        return self._value
+
+
+class BitArray2(Frame):
     def __init__(self, master, bitwidth, value, **kwargs):
         super().__init__(master)
-        self.bitwidth = bitwidth
         self.select_img = select_image()
         self.deselect_img = deselect_image()
-        self.labels_bitfield = []
+        self.bitlabels = []
         for col in range(bitwidth):
-            lbl_bitfield = Label(self,**kwargs)
-            # To avoid None type, Geometry mngr should call on created instance in new line :
-            lbl_bitfield.grid(row=0, column=col)
-            #self._create_label_group(col*4)
-            if col and not col%4:
-                Label(self).grid(row=0, column=col)
-            self.labels_bitfield.append(lbl_bitfield)
-
+            if col and not col % 4:
+                Label(self, text="").pack(side=LEFT, fill=Y)
+            bitlbl = BitLabel(self,
+                              on_image=self.select_img,
+                              off_image=self.deselect_img,
+                              **kwargs)
+            bitlbl.pack(side=LEFT, fill=Y)
+            self.bitlabels.append(bitlbl)
         self.set_value(value)
 
     def set_value(self, value):
-        for bitlabel in self.labels_bitfield:
-            if value & 1:
-                 bitlabel.config(image=self.deselect_img)
-            else:
-                 bitlabel.config(image=self.select_img)
+        for bitlabel in reversed(self.bitlabels):
+            bitlabel.set_value(value&1)
             value >>= 1
 
+    def get_value(self):
+        value = 0
+        for bitlbl in self.bitlabels:
+            value <<= 1
+            value += bitlbl.get_value()
+        return value
 
-    def _create_label_group(self, col):
-        for i in range(4):
-            bitlbl = Label(self)
-            bitlbl.grid(row=0, column=col+i)
-            self.labels_bitfield.append(bitlbl)
 
 
 if __name__ == '__main__':
     root = Tk()
-    bitframe = BitArray(master=root, bitwidth=12, value=423, borderwidth=0)#, highlightthickness=0)
+    bitframe = BitArray(master=root, bitwidth=12, value=254, borderwidth=0)#, highlightthickness=0)
     bitframe.grid()
-    bitlabel = BitLabel(master=root, bitwidth=12, value=423)
+    bitlabel = BitArray2(master=root, bitwidth=12, value=254)
     bitlabel.grid()
+    print(bitframe.get_value())
+    print(bitlabel.get_value())
     root.mainloop()

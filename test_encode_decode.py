@@ -90,21 +90,32 @@ def test_encode_14bit_6():
     assert encode(raw_value=0x313A, bitwidth=14) == [0xC, 4, 0xE, 8]
 
 
-# Test for High Speed Encoding start here:
-
-def test_high_speed_encode_12bit_1():
-    assert encode_high_speed(raw_value=0xFFF, bitwidth=12) == [7, 7, 7, 7]
+# Test for High Speed Encoding start here :
 
 
-def test_high_speed_encode_12bit_2():
-    assert encode_high_speed(raw_value=0x123, bitwidth=12) == [0, 4, 4, 3]
+def test_high_speed_enocde_1():
+    assert encode(raw_value=0xFFF, bitwidth=12, nibblewidth=3) == [7, 7, 7, 7]
 
 
-def test_high_speed_encode_12bit():
-    assert encode_high_speed(raw_value=0x777, bitwidth=12) == [3, 5, 6, 7]
+def test_high_speed_enocde_2():
+    assert encode(raw_value=0x123, bitwidth=12, nibblewidth=3) == [0, 4, 4, 3]
 
 
-# Test for ValueError in case of unfit Bitwidth :
+def test_high_speed_enocde_3():
+    assert encode(raw_value=0x777, bitwidth=12, nibblewidth=3) == [3, 5, 6, 7]
+
+
+# Test ValueError of normal High Speed Encoding in case of unfit Bitwidth :
+
+
+def test_high_speed_encode_bitwidth_exceed():
+    with pytest.raises(ValueError) as exc:
+        encode(raw_value=0xA5F4, bitwidth=12, nibblewidth=3)     # 42484
+        assert "doesn't fit bitwidth" in str(exc)
+
+
+
+# Test ValueError of normal Encoding in case of unfit Bitwidth :
 
 
 def test_encode_bitwidth_exceed():
@@ -358,7 +369,18 @@ def test_decode_14bit_6():
     assert decode(nibbles=[0, 0xC, 4, 0xE, 9, 0, 0, 0], bitwidth=14, msn=1, lsn=4) == 0x313A
 
 
+# Test Cases for Decoding High Speed Nibbles start here:
 
+def test_high_speed_decode_12bit_1():
+    assert decode(nibbles=[0, 7, 7, 7, 7, 0, 0, ], bitwidth=12, msn=1, lsn=4, nibblewidth=3) == 0xFFF
+
+
+def test_high_speed_decode_12bit_2():
+    assert decode(nibbles=[0, 4, 4, 3], bitwidth=12, msn=0, lsn=3, nibblewidth=3) == 0x123
+
+
+def test_high_speed_decode_12bit_3():
+    assert decode(nibbles=[0, 3, 5, 6, 7, 0, 0, ], bitwidth=12, msn=1, lsn=4, nibblewidth=3) == 0x777
 
 
 
