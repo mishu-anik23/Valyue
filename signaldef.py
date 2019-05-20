@@ -158,7 +158,7 @@ class SignalEncoding:
             raw_value >>= self.nibblewidth
         return list(reversed(nibbles))
 
-    def decode(self, nibbles):
+    def decode(self, dataframe):
         """
         Converts a sequence of nibbles to an integer raw value
         :param nibbles:
@@ -169,6 +169,15 @@ class SignalEncoding:
         """
         mask = (1 << self.nibblewidth) - 1
         raw_value = 0
+        if self.lsn > self.msn:
+            lower_end = self.msn
+            higher_end = self.lsn+1
+            nibbles = dataframe[lower_end:higher_end]
+        else:
+            lower_end = self.lsn
+            higher_end = self.msn+1
+            nibbles = list(reversed(dataframe[lower_end:higher_end]))
+
         for n in nibbles:
             raw_value <<= self.nibblewidth
             raw_value += n & mask
