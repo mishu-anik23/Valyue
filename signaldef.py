@@ -177,6 +177,7 @@ class SignalEncoding:
             raw_value >>= 2
         return raw_value
 
+
 class BitField:
     def __init__(self, bitwidth):
         self.bitwidth = int(bitwidth)
@@ -390,7 +391,7 @@ class SignalDefinition:
             physical = BitField.from_xml(xml_fragment)
         else:
             bitfield = False
-            physical = Physical.from_xml(xml_fragment, encoding.bitsize)
+            physical = Physical.from_xml(xml_fragment, encoding.bitwidth)
 
         return cls(
             name=xml_fragment.attrib['name'],
