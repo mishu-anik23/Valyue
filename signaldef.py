@@ -127,7 +127,6 @@ class SignalEncoding:
         return template.format(self)
 
     def __eq__(self, other):
-        # return self.bitsize == other.bitsize
         attrs = ['bitwidth', 'nibblewidth', 'msn', 'lsn']
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
@@ -170,7 +169,7 @@ class SignalEncoding:
         """
         mask = (1 << self.nibblewidth) - 1
         raw_value = 0
-        for n in nibbles[self.msn:self.lsn + 1]:
+        for n in nibbles:
             raw_value <<= self.nibblewidth
             raw_value += n & mask
         if self.bitwidth % 4:
