@@ -127,7 +127,6 @@ class SignalEncoding:
         return template.format(self)
 
     def __eq__(self, other):
-        # return self.bitsize == other.bitsize
         attrs = ['bitwidth', 'nibblewidth', 'msn', 'lsn']
         return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
@@ -146,33 +145,49 @@ class SignalEncoding:
                    lsn=encoding.attrib['lsn'])
 
     def encode(self, raw_value):
+        """Encode returns only the nibbles required for bitwidth."""
+        bitwidth = self.bitwidth
         mask = (1 << self.nibblewidth) - 1
         nibbles = []
-        if raw_value >= (1 << self.bitwidth):
+        if raw_value >= (1 << bitwidth):
             raise ValueError("Given value doesn't fit the bitwidth")
-        if self.bitwidth % 4 == 2:
+        if bitwidth % 4:
             raw_value <<= 2
             # shifting left by 2 bits means 2 more bits to encode :
-            self.bitwidth += 2
-        for n in range(self.bitwidth // self.nibblewidth):
+            bitwidth += 2
+        for n in range(bitwidth // self.nibblewidth):
             nibbles.append(raw_value & mask)
             raw_value >>= self.nibblewidth
-        return list(reversed(nibbles))
+        if self.lsn <= self.msn:
+            if self.bitwidth % 4:
+                nibbles[0] >>= 2
+            return nibbles
+        else:
+            return list(reversed(nibbles))
 
-    def decode(self, nibbles):
+    def decode(self, dataframe):
         """
-        Converts a sequence of nibbles to an integer raw value
-        :param nibbles:
-        :param msn: nibble index
-        :param lsn: nibble index
-        :param bitwidth: integer
-        :return: integer raw value
+        Convert a dataframe (8 nibbles) to a raw value.
+        :param dataframe:
+        :return: raw value
         """
         mask = (1 << self.nibblewidth) - 1
         raw_value = 0
-        for n in nibbles[self.msn:self.lsn + 1]:
+        if self.lsn <= self.msn:
+            lower_end = self.lsn
+            higher_end = self.msn+1
+            nibbles = dataframe[lower_end:higher_end]
+            if self.bitwidth % 4:
+                nibbles[0] <<= 2
+            nibbles = list(reversed(nibbles))
+        else:
+            lower_end = self.msn
+            higher_end = self.lsn+1
+            nibbles = dataframe[lower_end:higher_end]
+
+        for n in nibbles:
             raw_value <<= self.nibblewidth
-            raw_value += n & mask
+            raw_value |= n & mask
         if self.bitwidth % 4:
             raw_value >>= 2
         return raw_value
