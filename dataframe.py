@@ -41,6 +41,14 @@ class DataFrame:
                 frame[self.signal_1.encoding.lsn] = shared_nibble
         return frame
 
+    def decode_frame(self, nibbles):
+        nibbles_data_1 = nibbles[self.signal_1.encoding.msn:self.signal_1.encoding.lsn+1]
+        print(nibbles_data_1)
+        if self.signal_2 is not None:
+            nibbles_data_2 = nibbles[self.signal_2.encoding.lsn:self.signal_2.encoding.msn+1]
+            print(nibbles_data_2)
+            return self.signal_1.encoding.decode(nibbles_data_1), self.signal_2.encoding.decode(nibbles_data_2)
+        return self.signal_1.encoding.decode(nibbles), None
 
 def construct_shared_nibble(n1, n2):
     return n1 & 0xC | (n2 >> 2) & 0x3
@@ -84,6 +92,8 @@ if __name__ == '__main__':
                                   default=-21.671875)
                      )
     print(df.encode_frame())
+    print(df.decode_frame(nibbles=[0, 8, 7, 0, 7, 0, 0, 0]))
     print(df_2.encode_frame())
+    print(df_2.decode_frame(nibbles=[0, 9, 2, 11, 11, 2, 9, 0]))
     print(df_share.encode_frame())
     print(df_conti.encode_frame())
