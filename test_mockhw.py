@@ -32,6 +32,6 @@ def test_make_data_from_sigobj_1st_signal():
                               default=-21.671875)
     row_in = (100, sig_in.default)
 
-    assert make_data(row=row_in, conversion=sig_in.encode_frame) == (100, [0xF, 1, 9, 0xC, 0xF, 0xF, 0xF, 0xF])
+    assert make_data(row=row_in, conversion=sig_in.encode_frame) == (100, [0, 1, 9, 0xC, 0, 0, 0, 0])
 
 
