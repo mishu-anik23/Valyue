@@ -121,6 +121,12 @@ class SignalEncoding:
         self.msn = int(msn)
         self.lsn = int(lsn)
         self.nibblewidth = nibblewidth
+        if self.lsn <= self.msn:
+            self._first_nibble = self.lsn
+            self._last_nibble = self.msn + 1
+        else:
+            self._first_nibble = self.msn
+            self._last_nibble = self.lsn + 1
 
     def __repr__(self):
         template = "SignalEncoding(bitwidth={0.bitwidth}, 'nibblewidth={0.nibblewidth}, msn={0.msn}, lsn={0.lsn})"
@@ -165,6 +171,12 @@ class SignalEncoding:
         else:
             return list(reversed(nibbles))
 
+    def encode_frame(self, raw):
+        frame = [0xF] * 8
+        nibbles = self.encode(raw)
+        frame[self._first_nibble : self._last_nibble] = nibbles
+        return frame
+
     def decode(self, dataframe):
         """
         Convert a dataframe (8 nibbles) to a raw value.
@@ -173,17 +185,12 @@ class SignalEncoding:
         """
         mask = (1 << self.nibblewidth) - 1
         raw_value = 0
+        nibbles = dataframe[self._first_nibble : self._last_nibble]
+
         if self.lsn <= self.msn:
-            lower_end = self.lsn
-            higher_end = self.msn+1
-            nibbles = dataframe[lower_end:higher_end]
             if self.bitwidth % 4:
                 nibbles[0] <<= 2
             nibbles = list(reversed(nibbles))
-        else:
-            lower_end = self.msn
-            higher_end = self.lsn+1
-            nibbles = dataframe[lower_end:higher_end]
 
         for n in nibbles:
             raw_value <<= self.nibblewidth
@@ -420,6 +427,16 @@ class SignalDefinition:
             isbitfield=bitfield,
             context=context,
         )
+
+    def encode_frame(self, phy_value):
+        raw = self.physical.phy2raw(phy_value)
+        frame = self.encoding.encode_frame(raw)
+        return frame
+
+    def decode_frame(self, dataframe):
+        raw = self.encoding.decode(dataframe)
+        phy = self.physical.raw2phys(raw)
+        return phy
 
     def str2number(self, entry_input):
         try:

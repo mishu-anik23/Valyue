@@ -47,7 +47,7 @@ def test_decode_dataframe_one_signal_16_bit():
     assert df_obj_test.decode_frame(dataframe=[0, 8, 7, 0, 7, 0, 0, 0]) == (0x8707, None)
 
 
-def test_decode_dataframe_one_signal_12_bit():
+def test_decode_dataframe_one_signal_12_bit_zero_padded():
     df_obj_test = DataFrame(encoding1=SignalEncoding(bitwidth=12, msn=1, lsn=3))
 
     assert df_obj_test.decode_frame(dataframe=[0, 1, 9, 0xC, 0, 0, 0, 0]) == (0x19C, None)
@@ -59,3 +59,9 @@ def test_decode_dataframe_two_12_12_bit_same_signal():
                             )
 
     assert df_obj_test.decode_frame(dataframe=[0, 1, 9, 0xC, 0xC, 9, 1, 0]) == (0x19C, 0x19C)
+
+
+def test_decode_dataframe_one_signal_12_bit_no_zero_padded():
+    df_obj_test = DataFrame(encoding1=SignalEncoding(bitwidth=12, msn=2, lsn=4))
+
+    assert df_obj_test.decode_frame(dataframe=[0xF, 0xF, 9, 7, 0xE, 0xF, 0xF, 0xF]) == (0x97E, None)

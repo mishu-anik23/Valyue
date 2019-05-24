@@ -10,11 +10,23 @@ def test_encode_decode_16_bit_1st_signal():
     assert enc_obj_test.decode(dataframe=[0, 8, 7, 0, 7, 0, 0, 0]) == 0x8707
 
 
+def test_encode_frame_16_bit_1st_signal_no_zero_padded():
+    enc_obj_test = SignalEncoding(bitwidth=16, msn=1, lsn=4)
+
+    assert enc_obj_test.encode_frame(raw=0x8706) == [0xF, 8, 7, 0, 6, 0xF, 0xF, 0xF]
+
+
 def test_encode_decode_16_bit_2nd_signal():
     enc_obj_test = SignalEncoding(bitwidth=16, msn=6, lsn=3)
 
     assert enc_obj_test.encode(raw_value=0x8707) == [7, 0, 7, 8]
     assert enc_obj_test.decode(dataframe=[0, 0, 0, 7, 0, 7, 8, 0]) == 0x8707
+
+
+def test_encode_frame_16_bit_2nd_signal_no_zero_padded():
+    enc_obj_test = SignalEncoding(bitwidth=16, msn=6, lsn=3)
+
+    assert enc_obj_test.encode_frame(raw=0x8706) == [0xF, 0xF, 0xF, 6, 0, 7, 8, 0xF]
 
 
 def test_encode_decode_12_bit_1st_signal():
