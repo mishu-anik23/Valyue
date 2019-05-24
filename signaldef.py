@@ -121,12 +121,8 @@ class SignalEncoding:
         self.msn = int(msn)
         self.lsn = int(lsn)
         self.nibblewidth = nibblewidth
-        if self.lsn <= self.msn:
-            self._first_nibble = self.lsn
-            self._last_nibble = self.msn + 1
-        else:
-            self._first_nibble = self.msn
-            self._last_nibble = self.lsn + 1
+        self._first_nibble = min(lsn, msn)
+        self._last_nibble = max(lsn, msn)
 
     def __repr__(self):
         template = "SignalEncoding(bitwidth={0.bitwidth}, 'nibblewidth={0.nibblewidth}, msn={0.msn}, lsn={0.lsn})"
@@ -172,9 +168,9 @@ class SignalEncoding:
             return list(reversed(nibbles))
 
     def encode_frame(self, raw):
-        frame = [0xF] * 8
+        frame = [0] * 8
         nibbles = self.encode(raw)
-        frame[self._first_nibble : self._last_nibble] = nibbles
+        frame[self._first_nibble : self._last_nibble+1] = nibbles
         return frame
 
     def decode(self, dataframe):
@@ -185,7 +181,7 @@ class SignalEncoding:
         """
         mask = (1 << self.nibblewidth) - 1
         raw_value = 0
-        nibbles = dataframe[self._first_nibble : self._last_nibble]
+        nibbles = dataframe[self._first_nibble : self._last_nibble+1]
 
         if self.lsn <= self.msn:
             if self.bitwidth % 4:
