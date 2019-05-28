@@ -2,6 +2,12 @@ import os
 import csv
 
 
+def stream_processor_template(source):
+    for data in source:
+        # do something here
+        yield data
+
+
 def get_headers(filepath):
     with open(filepath) as csvfile:
         reader = csv.reader(csvfile, delimiter='\t')

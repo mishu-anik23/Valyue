@@ -51,13 +51,12 @@ def test_encode_frame_from_phy_shared_nibble_as_1st_signal():
 
     assert sig_in_shared.encode_frame(phy_value=sig_in_shared.default) == [0, 6, 7, 0, 0, 0, 0, 0]
 
-    assert sig_in_shared.encode_frame(phy_value=230.56789) == [0, 0xF, 0xF, 0xC, 0, 0, 0, 0]
-
     assert sig_in_shared.encode_frame(phy_value=52.10) == [0, 0xF, 0xA, 8, 0, 0, 0, 0]
     assert sig_in_shared.encode_frame(phy_value=54.55) == [0, 0xF, 0xF, 8, 0, 0, 0, 0]
     assert sig_in_shared.encode_frame(phy_value=54.66) == [0, 0xF, 0xF, 8, 0, 0, 0, 0]
     assert sig_in_shared.encode_frame(phy_value=54.67) == [0, 0xF, 0xF, 0xC, 0, 0, 0, 0]
     assert sig_in_shared.encode_frame(phy_value=130.10) == [0, 0xF, 0xF, 0xC, 0, 0, 0, 0]
+    assert sig_in_shared.encode_frame(phy_value=230.56789) == [0, 0xF, 0xF, 0xC, 0, 0, 0, 0]
 
     assert sig_in_shared.encode_frame(phy_value=-40.15) == [0, 4, 2, 0, 0, 0, 0, 0]
     assert sig_in_shared.encode_frame(phy_value=-66.15) == [0, 0, 0xE, 0, 0, 0, 0, 0]

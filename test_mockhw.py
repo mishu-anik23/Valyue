@@ -35,3 +35,14 @@ def test_make_data_from_sigobj_1st_signal():
     assert make_data(row=row_in, conversion=sig_in.encode_frame) == (100, [0, 1, 9, 0xC, 0, 0, 0, 0])
 
 
+def test_discard_columns_1():
+    row_in = {'N5': '1', 'N6': '1', 'N2': '7', 'CRC': '1', 'N3': '5', 'Time': '2,465519706899017e-06', 'N1': '10',
+              'Rx Time': '122770661', 'Typ': '0', 'Res': '0', 'Bus': '1', 'Skipped': '0',
+              'Sync Time': '31495', 'N0': '8', 'N4': '10', 'Stat/Err': '1000'}
+
+    to_remove = ['Typ', 'Stat/Err', 'Skipped']
+
+    assert discard_columns(row_in, to_remove) == {'N5': '1', 'N6': '1', 'N2': '7', 'CRC': '1', 'N3': '5',
+                                                  'Time': '2,465519706899017e-06', 'N1': '10',
+                                                  'Rx Time': '122770661', 'Res': '0', 'Bus': '1',
+                                                  'Sync Time': '31495', 'N0': '8', 'N4': '10'}
