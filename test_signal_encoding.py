@@ -57,6 +57,7 @@ def test_encode_decode_10_bit_1st_signal_1():
     enc_obj_test = SignalEncoding(bitwidth=10, msn=1, lsn=3)
 
     assert enc_obj_test.encode(raw_value=0xEB) == [3, 0xA, 0xC]
+    assert enc_obj_test.encode(raw_value=0x97E) == [2, 0x5, 0xF]
     assert enc_obj_test.decode(dataframe=[0, 3, 0xA, 0xC, 0, 0, 0, 0]) == 0xEB
 
 
