@@ -2,40 +2,31 @@ import csv
 from signaldef import *
 
 
-def csv_reader(filename):
-    filepath = os.path.join(os.getcwd(), 'data')
-    with open(os.path.join(filepath, filename)) as csvfile:
-        csv_it = csv.DictReader(csvfile, delimiter=';')
-        to_remove = ['Typ', 'Stat/Err', 'Skipped']
-        for value in csv_it:
-            discard_row = discard_type_512(value)
-            if discard_row:
-                continue
-            yield discard_columns(value, to_remove)
-
-
-def csv_read(filepath):
+def csv_read_from_file(filepath):
     with open(filepath) as csvfile:
-        csv_it = csv.DictReader(csvfile, delimiter=';')
-        for value in csv_it:
-            yield value
+        for row in get_csv_dict_reader(csvfile):
+            yield row
 
 
-def discard_columns(row, to_remove):
-    return {k: v for k, v in row.items() if k not in to_remove}
+def get_csv_dict_reader(csvfile):
+    csv_it = csv.DictReader(csvfile, delimiter=';')
+    return csv_it
 
 
-
-
-def generate_rows(source, to_remove):
+def discard_rows(source, criterion):
     for row in source:
-        if discard_type_512(row):
+        if criterion(row):
             continue
-        yield discard_columns(row, to_remove)
+        yield row
 
 
-def discard_type_512(source):
-    if source['Typ'] == '512':
+def discard_columns(source, to_remove):
+    for row in source:
+        yield {k: v for k, v in row.items() if k not in to_remove}
+
+
+def type_is_512(row):
+    if row['Typ'] == '512':
         return True
     return False
 
@@ -56,23 +47,22 @@ def create_conversion(signal):
 
 
 if __name__ == '__main__':
-    # it_obj = csv_reader('SENT_Trace_MUX_2016-11-14.csv')
-    # print(next(it_obj))
-     #print(next(it_obj))
-    #print(next(it_obj))
-    #print(next(it_obj))
-    #print(next(it_obj))
-    #print(next(it_obj))
     in_file_pth = os.path.join(os.getcwd(), 'data/SENT_Trace_MUX_2016-11-14.csv')
-    src_gens = csv_read(in_file_pth)
     to_remove = ['Typ', 'Stat/Err', 'Skipped']
-    rows = generate_rows(src_gens, to_remove)
-    print(next(rows))
-    print(next(rows))
-    print(next(rows))
-    print(next(rows))
-    print(next(rows))
-    print(next(rows))
+    csv_it = csv_read_from_file(in_file_pth)
+    print(next(csv_it))
+    print(next(csv_it))
+    print(next(csv_it))
+    print(next(csv_it))
+    rows_d = discard_rows(source=csv_read_from_file(in_file_pth), criterion=type_is_512)
+    rows_dc = discard_columns(rows_d, to_remove)
+    # print(next(rows_dc))
+    # print(next(rows_dc))
+
+
+
+
+
 
 
 
