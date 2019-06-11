@@ -2,34 +2,30 @@ import io
 from ascii2csv import *
 
 
-def test_get_csv_reader_from_file_obj():
-    file_content = io.StringIO("""\
-A\tB
-C\tD
-""")
-    assert next(get_csv_reader(file_content)) == ['A', 'B']
-    assert next(get_csv_reader(file_content)) == ['C', 'D']
-
-
 def test_get_headers_from_file_obj_1():
+    """Takes 3rd line as headers."""
     file_content = io.StringIO("""\
 A\tB
 C\tD
 E\tF
 G\tH
 """)
-    assert get_headers(source=get_csv_reader(file_content)) == ['E', 'F']
+    csv_reader = csv.reader(file_content, delimiter='\t')
+
+    assert get_headers(source=csv_reader) == ['E', 'F']
 
 
 def test_get_headers_from_file_obj_2():
+    """Takes 3rd line as headers."""
     file_content = io.StringIO("""\
 A\tB
 C\tD
 time\tChannel
 E\tF
 """)
-    src = get_csv_reader(file_content)
-    assert get_headers(source=src) == ['time', 'Channel']
+    csv_reader = csv.reader(file_content, delimiter='\t')
+
+    assert get_headers(source=csv_reader) == ['time', 'Channel']
 
 
 def test_row_generator_file_obj():
@@ -44,8 +40,17 @@ Data start\tfrom line 6
 anything\tanything
 """)
     headers_in = ['A', 'B']
-    src = get_csv_reader(file_content)
+    csv_reader = csv.reader(file_content, delimiter='\t')
+    csv_rows = row_generator(source=csv_reader, headers=headers_in)
 
-    assert next(row_generator(source=src, headers=headers_in)) == {'A': '1', 'B': '2'}
-    assert next(row_generator(source=src, headers=headers_in)) == {'A': '0,01', 'B': '5,09'}
-    assert next(row_generator(source=src, headers=headers_in)) == {'A': 'anything', 'B': 'anything'}
+    assert next(csv_rows) == {'A': '1', 'B': '2'}
+    assert next(csv_rows) == {'A': '0,01', 'B': '5,09'}
+    assert next(csv_rows) == {'A': 'anything', 'B': 'anything'}
+
+
+def test_comma2decimal():
+    rows_in = [{'A': '0,01', 'B': '5,09'}, {'A': '0,004', 'B': '9,098'}]
+    modified_row = comma2decimal(rows_in)
+
+    assert next(modified_row) == {'A': '0.01', 'B': '5.09'}
+    assert next(modified_row) == {'A': '0.004', 'B': '9.098'}

@@ -8,14 +8,10 @@ def stream_processor_template(source):
         yield data
 
 
-def get_csv_reader(csvfile):
-    reader = csv.reader(csvfile, delimiter='\t')
-    return reader
-
-
 def csv_read_from_file(filepath):
     with open(filepath) as csvfile:
-        for row in get_csv_reader(csvfile):
+        reader = csv.reader(csvfile, delimiter='\t')
+        for row in reader:
             yield row
 
 
@@ -52,7 +48,5 @@ if __name__ == '__main__':
     infilepath = os.path.join(os.getcwd(), 'out_short.ascii')
     output_path = os.path.join(os.getcwd(), 'out_short.csv')
     headers = get_headers(source=csv_read_from_file(infilepath))
-    print(headers)
     rows = row_generator(source=csv_read_from_file(infilepath), headers=headers)
-    print(next(rows))
     csv_writer(output_path, headers, source=comma2decimal(rows))
