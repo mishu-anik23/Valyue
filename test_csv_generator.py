@@ -20,8 +20,7 @@ Typ
 0
 512
 23
-"""
-                         )
+""")
     csv_it_discarded_row = discard_rows(source=get_csv_dict_reader(csv_in), criterion=type_is_512)
 
     assert next(csv_it_discarded_row) == {'Typ': '0'}

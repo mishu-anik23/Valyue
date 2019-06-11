@@ -13,23 +13,25 @@ def get_csv_reader(csvfile):
     return reader
 
 
-def get_headers(filepath):
+def csv_read_from_file(filepath):
     with open(filepath) as csvfile:
-        reader = get_csv_reader(csvfile)
-        for index, line in enumerate(reader):
-            if index == 2:
-                return line
+        for row in get_csv_reader(csvfile):
+            yield row
 
 
-def row_generator(filepath, headers):
-    with open(filepath) as csvfile:
-        reader = csv.reader(csvfile, delimiter='\t')
-        # discard the first 5 lines
-        for _ in range(5):
-            next(reader)
-        # now the actual data rows:
-        for row in reader:
-            yield dict(zip(headers, row))
+def get_headers(source):
+    for index, line in enumerate(source):
+        if index == 2:
+            return line
+
+
+def row_generator(source, headers):
+    # discard the first 5 lines
+    for _ in range(5):
+        next(source)
+    # now the actual data rows:
+    for row in source:
+        yield dict(zip(headers, row))
 
 
 def comma2decimal(source):
@@ -47,9 +49,10 @@ def csv_writer(filepath, headers, source):
 
 
 if __name__ == '__main__':
-    filepath = os.path.join(os.getcwd(), 'out_short.ascii')
+    infilepath = os.path.join(os.getcwd(), 'out_short.ascii')
     output_path = os.path.join(os.getcwd(), 'out_short.csv')
-    headers = get_headers(filepath)
-    rows = row_generator(filepath, headers)
+    headers = get_headers(source=csv_read_from_file(infilepath))
+    print(headers)
+    rows = row_generator(source=csv_read_from_file(infilepath), headers=headers)
     print(next(rows))
     csv_writer(output_path, headers, source=comma2decimal(rows))
