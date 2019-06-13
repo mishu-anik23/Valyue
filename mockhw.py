@@ -66,10 +66,10 @@ class MockHw:
         sync = rowdict['Sync Time']
         return rx_bus_id, typ, 0, data, rx_time, sync
 
-    def calc_rx_time_diff(self):
-        rx_time1 = next(self.source)['Rx Time']
-        rx_time2 = next(self.source)['Rx Time']
-        return rx_time2 - rx_time1
+    def get_time_and_data(self, row):
+        rx_time = row['Rx Time']
+        data = extract_nibbles(row)
+        return rx_time, data
 
 
 
@@ -82,30 +82,24 @@ if __name__ == '__main__':
     csv_it = csv_read_from_file(in_file_pth)
     rows_d = discard_rows(source=csv_read_from_file(in_file_pth), criterion=type_is_512)
     rows_dc = discard_columns(rows_d, to_remove)
-    print(next(rows_dc))
+    #print(next(rows_dc))
     # print(next(rows_dc))
     file_content = io.StringIO("""\
-Bus;Typ;Rx Time;Sync Time;N0;N1;N2;N3;N4;N5;N6;CRC
-1;2;3;44;0;1;2;3;14;2;4;1
-4;5;6;66;1;11;3;14;2;4;3;0
+Time;Bus;Typ;N0;N1;N2;N3;N4;N5;N6;CRC;Rx Time;Sync Time
+2,47e-6;1;0;8;10;7;5;10;1;1;1;122770661;31495
+0,01456917;1;0;8;11;7;4;15;4;15;9;122777518;31496
+0,02996182;1;0;0;12;7;4;15;5;0;12;12;31496
 """)
     csv_dct = csv.DictReader(file_content, delimiter=';')
-    hw_obj = MockHw(source=convert2int(rows_dc))
-    vals = hw_obj.get_value_from_row()
-    vals1 = hw_obj.get_value_from_row()
-    tdiff = hw_obj.calc_rx_time_diff()
-    #print(tdiff)
-    print(vals)
-    print(vals1)
-    print(tdiff)
-    print(hw_obj.calc_rx_time_diff())
-    print(hw_obj.calc_rx_time_diff())
-    print(hw_obj.calc_rx_time_diff())
-    print(hw_obj.calc_rx_time_diff())
-    print(hw_obj.calc_rx_time_diff())
-    print(hw_obj.calc_rx_time_diff())
+    mock_src = convert2int(csv_dct)
 
-
+    hw_obj = MockHw(source=mock_src)
+    # vals = hw_obj.get_value_from_row()
+    # vals1 = hw_obj.get_value_from_row()
+    # print(vals)
+    # print(vals1[3:5])
+    for row in mock_src:
+        print(hw_obj.get_time_and_data(row))
 
 
 

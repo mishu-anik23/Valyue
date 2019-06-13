@@ -107,3 +107,17 @@ A;B;C;Time
     assert next(row_converted) == {'A': 1, 'B': 2, 'C': 3}
     assert next(row_converted) == {'A': 4, 'B': 5, 'C': 6}
 
+
+def test_get_values_from_row_by_instantiate_mockhw():
+    file_content = io.StringIO("""\
+Time;Bus;Typ;N0;N1;N2;N3;N4;N5;N6;CRC;Rx Time;Sync Time
+2,47e-6;1;0;8;10;7;5;10;1;1;1;122770661;31495
+0,01456917;1;0;8;11;7;4;15;4;15;9;122777518;31496
+0,02996182;1;0;0;12;7;4;15;5;0;12;122785429;31496
+""")
+    csv_it = csv.DictReader(file_content, delimiter=';')
+    mock_src = convert2int(source=csv_it)
+    mockhw = MockHw(source=mock_src)
+
+    assert mockhw.get_value_from_row() == (1, 0, 0, [8, 10, 7, 5, 10, 1, 1, 1], 122770661, 31495)
+    assert mockhw.get_value_from_row() == (1, 0, 0, [8, 11, 7, 4, 15, 4, 15, 9], 122777518, 31496)
