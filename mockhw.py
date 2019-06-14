@@ -66,11 +66,6 @@ class MockHw:
         sync = rowdict['Sync Time']
         return rx_bus_id, typ, 0, data, rx_time, sync
 
-    def get_time_and_data(self, row):
-        rx_time = row['Rx Time']
-        data = extract_nibbles(row)
-        return rx_time, data
-
 
 
 
