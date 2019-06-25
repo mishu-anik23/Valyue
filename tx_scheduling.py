@@ -31,7 +31,7 @@ def trace_data(data, val):
     return data
 
 def scale_timestamp(time):
-    return time * 2.56e-6
+    return time * 2.56e-7
 
 
 
