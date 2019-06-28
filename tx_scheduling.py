@@ -3,13 +3,69 @@ import time
 from mockhw import *
 
 
-#container = []
-
-def tracing_data(data):
-    #data_container.fill_container()
-    print(time.time())
-    return
-
+# #container = []
+#
+# def tracing_data(data):
+#     #data_container.fill_container()
+#     print(time.time())
+#     return
+#
+#
+# def scale_timestamp(time):
+#     return time * 2.56e-6
+#
+#
+# class TxScheduler:
+#     def __init__(self, mockhw, scheduler, trace):
+#         self.mockhw = mockhw
+#         self.scheduler = scheduler
+#         self.trace = trace
+#         #self.previous_data = None
+#         #self.previous_ts = scale_timestamp(0)
+#         self.storage = DataContainer(data=None)
+#
+#     def transmit_data(self):
+#         try:
+#             row = self.mockhw.get_value_from_row()
+#         except StopIteration:
+#             self.trace(self.storage.previous_data)
+#             #self.trace(self.storage)
+#             return
+#
+#         if self.storage.previous_data is None:
+#             # this is the very first time we are called
+#             self.storage.previous_ts = scale_timestamp(row[4])
+#             start_time = scale_timestamp(row[4]) - self.storage.previous_ts
+#             self.storage.interval = start_time
+#         else:
+#             self.trace(self.storage.previous_data)
+#             #self.trace(self.storage)
+#             self.storage.interval = scale_timestamp(row[4]) - self.storage.previous_ts
+#             self.storage.previous_ts = scale_timestamp(row[4])
+#
+#         self.storage.previous_data = row[3]
+#         self.storage.fill_container()
+#         self.event_scheduler(self.storage.interval)
+#         print(self.storage.previous_ts)
+#
+#         print(self.storage.interval)
+#         print(self.storage.previous_data)
+#         print(self.storage.container)
+#
+#     def event_scheduler(self, interval):
+#         self.scheduler.enter(interval, 1, self.transmit_data)
+#
+#
+# class DataContainer:
+#     def __init__(self, data):
+#         self.previous_data = data
+#         self.container = []
+#         self.previous_ts = scale_timestamp(0)
+#         self.interval = scale_timestamp(0)
+#
+#     def fill_container(self):
+#         self.container.append((self.previous_data, self.interval))
+#         #self.container.append(self.previous_data)
 
 def scale_timestamp(time):
     return time * 2.56e-6
@@ -20,74 +76,41 @@ class TxScheduler:
         self.mockhw = mockhw
         self.scheduler = scheduler
         self.trace = trace
-        #self.previous_data = None
-        #self.previous_ts = scale_timestamp(0)
-        self.storage = DataContainer(data=None)
+        self.previous_data = None
+        self.previous_ts = scale_timestamp(0)
+
 
     def transmit_data(self):
         try:
             row = self.mockhw.get_value_from_row()
         except StopIteration:
-            self.trace(self.storage.previous_data)
-            #self.trace(self.storage)
+            self.trace(self.previous_data)
             return
 
-        if self.storage.previous_data is None:
+        if self.previous_data is None:
             # this is the very first time we are called
-            self.storage.previous_ts = scale_timestamp(row[4])
-            start_time = scale_timestamp(row[4]) - self.storage.previous_ts
-            self.storage.interval = start_time
+            self.previous_ts = scale_timestamp(row[4])
+            start_time = scale_timestamp(row[4]) - self.previous_ts
+            interval = start_time
         else:
-            self.trace(self.storage.previous_data)
-            #self.trace(self.storage)
-            self.storage.interval = scale_timestamp(row[4]) - self.storage.previous_ts
-            self.storage.previous_ts = scale_timestamp(row[4])
+            self.trace(self.previous_data)
+            interval = scale_timestamp(row[4]) - self.previous_ts
+            self.previous_ts = scale_timestamp(row[4])
 
-        self.storage.previous_data = row[3]
-        self.storage.fill_container()
-        self.event_scheduler(self.storage.interval)
-        print(self.storage.previous_ts)
-
-        print(self.storage.interval)
-        print(self.storage.previous_data)
-        print(self.storage.container)
+        self.previous_data = row[3]
+        self.event_scheduler(interval)
+        print(interval)
 
     def event_scheduler(self, interval):
         self.scheduler.enter(interval, 1, self.transmit_data)
 
 
 class DataContainer:
-    def __init__(self, data):
-        self.previous_data = data
+    def __init__(self):
         self.container = []
-        self.previous_ts = scale_timestamp(0)
-        self.interval = scale_timestamp(0)
 
-    def fill_container(self):
-        self.container.append(self.previous_data)
-
-
-#my_list = []
-
-def record_arguments(argument, my_list):
-    my_list.append(argument)
-    print('Saved argument:', argument)
-
-
-# if __name__ == '__main__':
-#     # record_arguments(5)
-#     # record_arguments(4)
-#     # record_arguments(3)
-#     # print(my_list)
-#     lst = []
-#     trace = lambda x: record_arguments(x, lst)
-#     trace(5)
-#     trace(4)
-#     trace(3)
-#
-#     print(lst)
-
-
+    def trace_data(self, data):
+        self.container.append(data)
 
 if __name__ == '__main__':
     file_content = io.StringIO("""\
