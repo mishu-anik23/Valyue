@@ -16,11 +16,14 @@ class DataContainer:
 
     def trace_data(self, data):
         self.container.append(data)
+
+    def trace_time(self, data):
         self.time_info.append(time.perf_counter())
 
 
 @pytest.fixture()
 def mockhw():
+    """Setup the csv file input by instantiating as mockhw object."""
     file_content = io.StringIO("""\
 Time;Bus;Typ;N0;N1;N2;N3;N4;N5;N6;CRC;Rx Time;Sync Time
 0,01456917;1;0;1;11;7;4;15;4;15;9;122770661;31496
@@ -40,6 +43,7 @@ Time;Bus;Typ;N0;N1;N2;N3;N4;N5;N6;CRC;Rx Time;Sync Time
 
 
 def test_all_scheduled_data_in_a_container(mockhw):
+    """Storing all scheduled event in a list."""
     sched1 = sched.scheduler(time.time, time.sleep)
     dc1 = DataContainer()
 
@@ -58,6 +62,7 @@ def test_all_scheduled_data_in_a_container(mockhw):
 
 
 def test_store_scheduled_data_in_container(mockhw):
+    """Storing scheduled event in a list one after another."""
     sched2 = sched.scheduler(time.time, time.sleep)
     dc2 = DataContainer()
 
@@ -73,34 +78,41 @@ def test_store_scheduled_data_in_container(mockhw):
 
 
 def test_store_scheduled_event_time(mockhw):
+    """Interval of calling two consecutive trace function in real time and the interval of two consecutive timestamp
+    recorded by the HW is almost equal with 5% tolerance."""
     sched3 = sched.scheduler(time.time, time.sleep)
     dc3 = DataContainer()
 
-    txsched3 = TxScheduler(mockhw, sched3, dc3.trace_data)
+    txsched3 = TxScheduler(mockhw, sched3, dc3.trace_time)
     sched3.enter(0, 1, txsched3.transmit_data)
     sched3.run()
 
-    print(dc3.time_info)
-    print(time.perf_counter())
+    delta_t = dc3.time_info[2] - dc3.time_info[1]
+    assert delta_t == pytest.approx((122785429 - 122777518) * 2.56e-6, rel=0.05)
+
+    delta_t = dc3.time_info[3] - dc3.time_info[2]
+    assert delta_t == pytest.approx((122792706 - 122785429) * 2.56e-6, rel=0.05)
+
+    delta_t = dc3.time_info[7] - dc3.time_info[6]
+    assert delta_t == pytest.approx((122840561 - 122820800) * 2.56e-6, rel=0.05)
+
+    delta_t = dc3.time_info[6] - dc3.time_info[5]
+    assert delta_t == pytest.approx((122820800 - 122807016) * 2.56e-6, rel=0.05)
 
 
-    assert dc3.time_info[2] - dc3.time_info[1] == pytest.approx((122785429 * 2.56e-6) - (122777518 * 2.56e-6), abs=2.56e-3)
-    assert dc3.time_info[3] - dc3.time_info[2] == pytest.approx((122792706 * 2.56e-6) - (122785429 * 2.56e-6), abs=2.56e-3)
-
-    assert dc3.time_info[7] - dc3.time_info[6] == pytest.approx((122840561 * 2.56e-6) - (122820800 * 2.56e-6), abs=2.56e-3)
-    assert dc3.time_info[6] - dc3.time_info[5] == pytest.approx((122820800 * 2.56e-6) - (122807016 * 2.56e-6), abs=2.56e-3)
-
-
-def test_event_scheduling_starts_from_zero(mockhw):
+def test_event_scheduling_starts_in_less_than_1s(mockhw):
+    """Event scheduling starts in less than 1s"""
     sched4 = sched.scheduler(time.time, time.sleep)
     dc4 = DataContainer()
 
-    txsched4 = TxScheduler(mockhw, sched4, dc4.trace_data)
+    txsched4 = TxScheduler(mockhw, sched4, dc4.trace_time)
     sched4.enter(0, 1, txsched4.transmit_data)
+
+    start_time = time.perf_counter()
     sched4.run()
 
-    #assert time.perf_counter() - dc4.time_info[0] == pytest.approx(0.0, abs=2.56e-3)
-    #assert dc4.time_info[0] == pytest.approx(time.perf_counter(), abs=2.56e-3)
+    assert dc4.time_info[0] - start_time < 1
+
 
 
 

@@ -17,15 +17,16 @@ class TxScheduler:
             self.trace(self.previous_data)
             return
 
+        timestamp = scale_timestamp(row[4])
         if self.previous_data is None:
             # this is the very first time we are called
-            self.previous_ts = scale_timestamp(row[4])
-            start_time = scale_timestamp(row[4]) - self.previous_ts
+            self.previous_ts = timestamp
+            start_time = timestamp
             interval = start_time
         else:
             self.trace(self.previous_data)
-            interval = scale_timestamp(row[4]) - self.previous_ts
-            self.previous_ts = scale_timestamp(row[4])
+            interval = timestamp - self.previous_ts
+            self.previous_ts = timestamp
 
         self.previous_data = row[3]
         self.event_scheduler(interval)
