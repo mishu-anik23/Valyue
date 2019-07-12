@@ -1,8 +1,12 @@
 import pytest
+
+import csv
+import io
 import sched
 import time
-from mockhw import *
-from tx_scheduling import *
+
+from mockhw import MockHw, convert2int
+from tx_scheduling import TxScheduler
 
 
 class DataContainer:
@@ -33,17 +37,6 @@ Time;Bus;Typ;N0;N1;N2;N3;N4;N5;N6;CRC;Rx Time;Sync Time
     mock_src = convert2int(source=csv_it)
     mockhw = MockHw(source=mock_src)
     return mockhw
-
-
-def test_store_scheduled_time(mockhw):
-    sched3 = sched.scheduler(time.time, time.sleep)
-    dc3 = DataContainer()
-
-    txsched3 = TxScheduler(mockhw, sched3, dc3.trace_data)
-    sched3.enter(0, 1, txsched3.transmit_data)
-    sched3.run()
-
-    assert dc3.time_info[2] - dc3.time_info[1] == pytest.approx((122785429 * 2.56e-6) - (122777518 * 2.56e-6), 0.1)
 
 
 def test_all_scheduled_data_in_a_container(mockhw):
@@ -77,6 +70,38 @@ def test_store_scheduled_data_in_container(mockhw):
 
     assert dc2.container[-1] == [8, 14, 7, 11, 0, 12, 0, 2]
     assert dc2.container[-2] == [7, 2, 8, 0, 4, 2, 3, 3]
+
+
+def test_store_scheduled_event_time(mockhw):
+    sched3 = sched.scheduler(time.time, time.sleep)
+    dc3 = DataContainer()
+
+    txsched3 = TxScheduler(mockhw, sched3, dc3.trace_data)
+    sched3.enter(0, 1, txsched3.transmit_data)
+    sched3.run()
+
+    print(dc3.time_info)
+    print(time.perf_counter())
+
+
+    assert dc3.time_info[2] - dc3.time_info[1] == pytest.approx((122785429 * 2.56e-6) - (122777518 * 2.56e-6), abs=2.56e-3)
+    assert dc3.time_info[3] - dc3.time_info[2] == pytest.approx((122792706 * 2.56e-6) - (122785429 * 2.56e-6), abs=2.56e-3)
+
+    assert dc3.time_info[7] - dc3.time_info[6] == pytest.approx((122840561 * 2.56e-6) - (122820800 * 2.56e-6), abs=2.56e-3)
+    assert dc3.time_info[6] - dc3.time_info[5] == pytest.approx((122820800 * 2.56e-6) - (122807016 * 2.56e-6), abs=2.56e-3)
+
+
+def test_event_scheduling_starts_from_zero(mockhw):
+    sched4 = sched.scheduler(time.time, time.sleep)
+    dc4 = DataContainer()
+
+    txsched4 = TxScheduler(mockhw, sched4, dc4.trace_data)
+    sched4.enter(0, 1, txsched4.transmit_data)
+    sched4.run()
+
+    #assert time.perf_counter() - dc4.time_info[0] == pytest.approx(0.0, abs=2.56e-3)
+    #assert dc4.time_info[0] == pytest.approx(time.perf_counter(), abs=2.56e-3)
+
 
 
 
