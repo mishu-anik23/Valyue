@@ -45,8 +45,10 @@ def csv_writer(filepath, headers, source):
 
 
 if __name__ == '__main__':
-    infilepath = os.path.join(os.getcwd(), 'out_short.ascii')
-    output_path = os.path.join(os.getcwd(), 'out_short.csv')
+    #infilepath = os.path.join(os.getcwd(), 'out_short.ascii')
+    infilepath = os.path.join(os.getcwd(), 'data', '20161017_Test_Tool_MS0660X3i_02_10.ascii')
+    #output_path = os.path.join(os.getcwd(), 'out_short.csv')
+    output_path = os.path.join(os.getcwd(), 'data', '20161017_Test_Tool_MS0660X3i_02_10.csv')
     headers = get_headers(source=csv_read_from_file(infilepath))
     rows = row_generator(source=csv_read_from_file(infilepath), headers=headers)
     csv_writer(output_path, headers, source=comma2decimal(rows))

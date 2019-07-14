@@ -1,6 +1,3 @@
-from signaldef import *
-
-
 class DataFrame:
     """
     Constructs Nibble data of 1 or 2 signal (if present) in a SENT data frame.
