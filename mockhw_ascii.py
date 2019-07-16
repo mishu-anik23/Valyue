@@ -105,7 +105,7 @@ if __name__ == '__main__':
                                   encoding=SignalEncoding(bitwidth=12, msn=1, lsn=3),
                                   default=-21.671875)
 
-    sig_in_2nd = SignalDefinition(name="prs_ctl_dif_rag_fil", minimum='-40', maximum='165', unit='C',
+    sig_in_2nd = SignalDefinition(name="t_dly_diag_inh_sens_sent", minimum='-40', maximum='165', unit='C',
                                   physical=Physical(x1=-40, x2=165, y1=1, y2=26241, bitwidth=16),
                                   encoding=SignalEncoding(bitwidth=16, msn=6, lsn=3),
                                   default=25.46)
@@ -114,16 +114,16 @@ if __name__ == '__main__':
     print(len(headers))
 
     rows = row_generator(source=csv_read_from_file(infilepath), headers=headers)
-    print(len(next(rows)))
+    #print(len(next(rows)))
     sigrows = signal_row_generator(source=comma2decimal(rows), signal1=sig_in_1st, signal2=sig_in_2nd)
     print(next(sigrows))
 
     sigframe = signal_frame_generator(source=sigrows, signal1=sig_in_1st, signal2=sig_in_2nd)
-    print(next(sigframe))
+    #print(next(sigframe))
 
     sent_rows = sent_csv_adapter(source=sigframe)
-    print(next(sent_rows))
+    #print(next(sent_rows))
 
     mhw = MockHw(source=sent_rows)
-    print(mhw.get_value_from_row())
+    #print(mhw.get_value_from_row())
     #csv_writer(output_path, headers, source=comma2decimal(rows))
