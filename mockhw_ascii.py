@@ -3,6 +3,27 @@ import csv
 from signaldef import *
 from dataframe import DataFrame
 
+
+ascii2sent_headers = {
+    'temp_rag_tank_sens': 'Temperature',
+    'rtl_mes_sens[0]': 'Level signal 2 - Combi-sensor',
+    'conc_rag_sens': 'Concentration',
+    'vel_rag_ucls_sent': 'Speed',
+    'vcc_rag_ucls': 'Supply Voltage',
+    'rt_rag_ucls[0]': 'Runtime 1',
+    'rt_rag_ucls[1]': 'Runtime 2',
+    'rt_rag_ucls[2]': 'Runtime 3',
+    'rt_rag_ucls[3]': 'Runtime 4',
+    'ampl_rag_ucls_sent[0]': 'Amplitude 1',
+    'ampl_rag_ucls_sent[1]': 'Amplitude 2',
+    'ampl_rag_ucls_sent[2]': 'Amplitude 3',
+    'ampl_rag_ucls_sent[3]': 'Amplitude 4',
+    'qly_rag_ucls[0]': 'Quality 1',
+    'qly_rag_ucls[1]': 'Quality 2',
+    'qly_rag_ucls[2]': 'Quality 3',
+    'qly_rag_ucls[3]': 'Quality 4',
+    'rtl_mes_sens[1]': 'Level signal 1 - Direct-sensor',
+}
 def csv_read_from_file(filepath):
     with open(filepath) as csvfile:
         reader = csv.reader(csvfile, delimiter='\t')
@@ -15,6 +36,16 @@ def get_headers(source):
         if index == 2:
             #return line
             return [elem.rstrip('\\XCP:1') for elem in line]
+
+
+def convert_sent_headers(ascii_headers):
+    lst = []
+    for i, d in enumerate(ascii_headers):
+        if d in ascii2sent_headers:
+            a = ascii_headers[i].replace(ascii_headers[i], ascii2sent_headers[d])
+            lst.append(a)
+    return lst
+    #return [elem.replace(elem, ascii2sent_headers[elem]) for elem in ascii_headers if elem in ascii2sent_headers]
 
 
 def row_generator(source, headers):
@@ -36,7 +67,7 @@ def signal_row_generator(source, signal1, signal2=None):
 
 def signal_frame_generator(source, signal1, signal2=None):
     for row in source:
-        ts = row['time']
+        ts = scale_sent_timestamp(row['time'])
         phy1 = intorfloat(row[signal1.name])
         raw1 = signal1.physical.phy2raw(phy1)
         df = DataFrame(encoding1=signal1.encoding)
@@ -53,14 +84,23 @@ def signal_frame_generator(source, signal1, signal2=None):
 
 def sent_csv_adapter(source):
     for ts, frame in source:
-        rowdct_sent = {}
-        rowdct_sent['Bus'] = 0.0
-        rowdct_sent['Typ'] = 0.0
-        rowdct_sent['Sync Time'] = 0.0
-        rowdct_sent['Rx Time'] = float(ts)
-        rowdct_sent.update(insert_nibbles(frame))
+        yield make_sent_row(ts, frame)
 
-        yield rowdct_sent
+
+def scale_sent_timestamp(time):
+    return int(float(time) / 2.56e-6)
+
+
+def make_sent_row(ts, frame):
+    # rowdct_sent = {}
+    rowdct_sent = insert_nibbles(frame)
+    rowdct_sent['Bus'] = 0
+    rowdct_sent['Typ'] = 0
+    rowdct_sent['Sync Time'] = 0
+    rowdct_sent['Rx Time'] = ts
+
+    return rowdct_sent
+
 
 
 def comma2decimal(source):
@@ -111,7 +151,10 @@ if __name__ == '__main__':
                                   default=25.46)
 
     print(headers)
-    print(len(headers))
+
+    sent_headers = convert_sent_headers(headers)
+    print(sent_headers)
+    #print(len(headers))
 
     rows = row_generator(source=csv_read_from_file(infilepath), headers=headers)
     #print(len(next(rows)))
