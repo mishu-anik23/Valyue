@@ -1,3 +1,6 @@
+import operator
+
+
 def unique_rows(source, signal1, signal2=None):
     lst = []
     prev_row = next(source)
@@ -19,6 +22,39 @@ def unique_rows(source, signal1, signal2=None):
             lst.append(r)
 
     return lst
+
+
+def drop_duplicates_1(source):
+    for elem in source:
+        yield elem
+
+
+def drop_duplicates(source, predicate=operator.__eq__):
+    prev = None
+    for elem in source:
+        if prev is not None:
+            if predicate(elem, prev):
+                continue
+        prev = elem
+        yield elem
+
+
+def compare_rows(row1, row2):
+    for k1, v1 in row1.items():
+        for k2, v2 in row2.items():
+            if k1 or k2 == 'time':
+                continue
+        return True
+    else:
+        return False
+
+
+def compare_x_values(value1, value2):
+    if value1[0] == value2[0]:
+        return True
+    else:
+        return False
+
 
 
 class UniqueRows:

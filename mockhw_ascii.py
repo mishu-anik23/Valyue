@@ -42,14 +42,13 @@ def get_headers(source):
 
 def translate_headers(headers, mapping):
     lst = []
-    for i, d in enumerate(headers):
-        if d in mapping:
-            replc_str = headers[i].replace(d, mapping[d])
-            lst.append(replc_str)
+    for header in headers:
+        if header in mapping:
+            replc_str = mapping[header]
         else:
-            lst.append(d)
+            replc_str = header
+        lst.append(replc_str)
     return lst
-    #return [elem.replace(elem, ascii2sent_headers[elem]) for elem in ascii_headers if elem in ascii2sent_headers]
 
 
 def row_generator(source, headers):
@@ -67,8 +66,6 @@ def signal_row_generator(source, signal1, signal2=None):
         headings = ['time', signal1.name, signal2.name]
     for row in source:
         yield {k: v for k, v in row.items() if k in headings}
-
-
 
 
 def signal_frame_generator(source, signal1, signal2=None):
