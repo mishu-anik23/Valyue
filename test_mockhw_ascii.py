@@ -42,6 +42,13 @@ time,prs_rag,prs_rag_sent,state_com_sens_sent[UREA_PRS],t_dly_diag_inh_sens_sent
     return csv_row
 
 
+def test_translate_headers_ascii_to_sent():
+    headers_in = ['A', 'B', 'X', 'W', 'C']
+    conversion_dct = {'A': 'Apple', 'B': 'Ball', 'C': 'Cat'}
+
+    assert translate_headers(headers=headers_in, mapping=conversion_dct) == ['Apple', 'Ball', 'X', 'W', 'Cat']
+
+
 def test_signal_row_generator_with_time_and_one_signal_1(processed_ascii):
     signal_row = signal_row_generator(source=processed_ascii, signal1=sig_in_1st)
 

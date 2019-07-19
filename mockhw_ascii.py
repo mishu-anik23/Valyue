@@ -24,6 +24,8 @@ ascii2sent_headers = {
     'qly_rag_ucls[3]': 'Quality 4',
     'rtl_mes_sens[1]': 'Level signal 1 - Direct-sensor',
 }
+
+
 def csv_read_from_file(filepath):
     with open(filepath) as csvfile:
         reader = csv.reader(csvfile, delimiter='\t')
@@ -38,12 +40,14 @@ def get_headers(source):
             return [elem.rstrip('\\XCP:1') for elem in line]
 
 
-def convert_sent_headers(ascii_headers):
+def translate_headers(headers, mapping):
     lst = []
-    for i, d in enumerate(ascii_headers):
-        if d in ascii2sent_headers:
-            a = ascii_headers[i].replace(ascii_headers[i], ascii2sent_headers[d])
-            lst.append(a)
+    for i, d in enumerate(headers):
+        if d in mapping:
+            replc_str = headers[i].replace(d, mapping[d])
+            lst.append(replc_str)
+        else:
+            lst.append(d)
     return lst
     #return [elem.replace(elem, ascii2sent_headers[elem]) for elem in ascii_headers if elem in ascii2sent_headers]
 
@@ -63,6 +67,8 @@ def signal_row_generator(source, signal1, signal2=None):
         headings = ['time', signal1.name, signal2.name]
     for row in source:
         yield {k: v for k, v in row.items() if k in headings}
+
+
 
 
 def signal_frame_generator(source, signal1, signal2=None):
@@ -140,26 +146,40 @@ if __name__ == '__main__':
     output_path = os.path.join(os.getcwd(), 'out_short.csv')
     headers = get_headers(source=csv_read_from_file(infilepath))
 
-    sig_in_1st = SignalDefinition(name="prs_rag", minimum='-40.15', maximum='130.10', unit='C',
-                                  physical=Physical(x1=-40.15, x2=130.10, y1=264, y2=1626, bitwidth=12),
-                                  encoding=SignalEncoding(bitwidth=12, msn=1, lsn=3),
-                                  default=-21.671875)
+    sig_in_1st = SignalDefinition(name="Supply Voltage", minimum='0', maximum='40.75', unit='V',
+                                  physical=spec_conti(minimum=0, maximum=40.75,
+                                                      resolution=0.16, bitwidth=8, errorcodes={}, offset=0),
+                                  encoding=SignalEncoding(bitwidth=8, msn=1, lsn=2),
+                                  default=5.671875)
 
-    sig_in_2nd = SignalDefinition(name="t_dly_diag_inh_sens_sent", minimum='-40', maximum='165', unit='C',
-                                  physical=Physical(x1=-40, x2=165, y1=1, y2=26241, bitwidth=16),
+    sig_in_2nd = SignalDefinition(name="Concentration", minimum='-10', maximum='100', unit='%',
+                                  physical=spec_conti(minimum=-10, maximum=100,
+                                                      resolution=0.01, bitwidth=16, errorcodes={}, offset=-10),
                                   encoding=SignalEncoding(bitwidth=16, msn=6, lsn=3),
                                   default=25.46)
 
     print(headers)
 
-    sent_headers = convert_sent_headers(headers)
+    sent_headers = translate_headers(headers, mapping=ascii2sent_headers)
     print(sent_headers)
     #print(len(headers))
 
-    rows = row_generator(source=csv_read_from_file(infilepath), headers=headers)
+    rows = row_generator(source=csv_read_from_file(infilepath), headers=sent_headers)
     #print(len(next(rows)))
-    sigrows = signal_row_generator(source=comma2decimal(rows), signal1=sig_in_1st, signal2=sig_in_2nd)
-    print(next(sigrows))
+    sigrows = signal_row_generator(source=comma2decimal(rows), signal1=sig_in_2nd)#, signal2=sig_in_2nd)
+    #print(next(sigrows))
+
+    #ur = UniqueRow(source=sigrows, signal1=sig_in_2nd)
+
+    #urows = unique_rows(source=sigrows, signal1=sig_in_2nd)
+
+    #print(urows)
+
+    urows = UniqueRows(source=sigrows, signal1=sig_in_2nd)
+
+    print(urows.storage)
+    ugens = urows.generate_unique_rows()
+    print(next(ugens))
 
     sigframe = signal_frame_generator(source=sigrows, signal1=sig_in_1st, signal2=sig_in_2nd)
     #print(next(sigframe))
