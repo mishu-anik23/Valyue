@@ -40,13 +40,14 @@ def drop_duplicates(source, predicate=operator.__eq__):
 
 
 def compare_rows(row1, row2):
-    for k1, v1 in row1.items():
-        for k2, v2 in row2.items():
-            if k1 or k2 == 'time':
-                continue
-        return True
-    else:
-        return False
+    if row1['time'] != row2['time']:
+        row_no_time1 = {k: v for k, v in row1.items() if k != 'time'}
+        row_no_time2 = {k: v for k, v in row2.items() if k != 'time'}
+
+        if operator.__eq__(row_no_time1, row_no_time2):
+            return True
+        else:
+            return False
 
 
 def compare_x_values(value1, value2):

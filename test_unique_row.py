@@ -83,13 +83,13 @@ def test_unique_rows_with_one_signal_return_unique_elements():
 
 def test_unique_rows_with_time_and_one_signal_return_unique_elements():
     generator = make_generator(source=input_src_1_signal)
-    urows = drop_duplicates(source=generator)
+    urows = drop_duplicates(source=generator, predicate=compare_rows)
 
     assert next(urows) == {'time': 0.123, 'Concentration': 80.0}
     assert next(urows) == {'time': 0.223, 'Concentration': 70.0}
-    assert urows[2] == {'time': 0.363, 'Concentration': 80.0}
-    assert urows[3] == {'time': 0.523, 'Concentration': 90.0}
-    assert urows[4] == {'time': 0.823, 'Concentration': 60.0}
+    assert next(urows) == {'time': 0.363, 'Concentration': 80.0}
+    assert next(urows) == {'time': 0.523, 'Concentration': 90.0}
+    assert next(urows) == {'time': 0.823, 'Concentration': 60.0}
 
 
 def test_unique_rows_with_two_signal_return_unique_elements():
