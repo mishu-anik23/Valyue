@@ -166,18 +166,6 @@ if __name__ == '__main__':
     sigrows = signal_row_generator(source=comma2decimal(rows), signal1=sig_in_2nd)#, signal2=sig_in_2nd)
     #print(next(sigrows))
 
-    #ur = UniqueRow(source=sigrows, signal1=sig_in_2nd)
-
-    #urows = unique_rows(source=sigrows, signal1=sig_in_2nd)
-
-    #print(urows)
-
-    urows = UniqueRows(source=sigrows, signal1=sig_in_2nd)
-
-    print(urows.storage)
-    ugens = urows.generate_unique_rows()
-    print(next(ugens))
-
     sigframe = signal_frame_generator(source=sigrows, signal1=sig_in_1st, signal2=sig_in_2nd)
     #print(next(sigframe))
 

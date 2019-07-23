@@ -1,5 +1,3 @@
-import pytest
-
 from signaldef import *
 from unique_row import *
 
@@ -15,7 +13,6 @@ sig_in_2nd = SignalDefinition(name="Supply Voltage", minimum='0', maximum='40.75
                                                   resolution=0.16, bitwidth=8, errorcodes={}, offset=0),
                               encoding=SignalEncoding(bitwidth=8, msn=1, lsn=2),
                               default=5.671875)
-
 
 input_src_1_signal = [{'time': 0.123, 'Concentration': 80.0},
                       {'time': 0.153, 'Concentration': 80.0},
@@ -39,11 +36,6 @@ def make_generator(source):
         yield row
 
 
-def discard_time(source):
-    for row in source:
-        yield {k: v for k, v in row.items() if k != 'time'}
-
-
 def test_drop_duplicates_is_a_generator():
     input_list = [1, 2, 3, 4, 5]
     fake_gen = make_generator(source=input_list)
@@ -51,7 +43,7 @@ def test_drop_duplicates_is_a_generator():
     assert list(urows) == [1, 2, 3, 4, 5]
 
 
-def test_drop_duplicates_returns_a_unique_list_2():
+def test_drop_duplicates_returns_a_unique_list():
     input_list = [1, 1, 2, 2, 2, 3]
     urows = drop_duplicates(source=input_list)
     assert list(urows)[:2] == [1, 2]
@@ -70,20 +62,9 @@ def test_drop_duplicates_does_not_like_none():
     assert list(urows) == [None, None]
 
 
-def test_unique_rows_with_one_signal_return_unique_elements():
+def test_drop_duplicates_with_compare_rows_ignores_time_and_return_unique_elements_1():
     generator = make_generator(source=input_src_1_signal)
-    urows = drop_duplicates(source=discard_time(generator))
-
-    assert next(urows) == {'Concentration': 80.0}
-    assert next(urows) == {'Concentration': 70.0}
-    assert next(urows) == {'Concentration': 80.0}
-    assert next(urows) == {'Concentration': 90.0}
-    assert next(urows) == {'Concentration': 60.0}
-
-
-def test_unique_rows_with_time_and_one_signal_return_unique_elements():
-    generator = make_generator(source=input_src_1_signal)
-    urows = drop_duplicates(source=generator, predicate=compare_rows)
+    urows = drop_duplicates(source=generator, predicate=isequal)
 
     assert next(urows) == {'time': 0.123, 'Concentration': 80.0}
     assert next(urows) == {'time': 0.223, 'Concentration': 70.0}
@@ -92,54 +73,84 @@ def test_unique_rows_with_time_and_one_signal_return_unique_elements():
     assert next(urows) == {'time': 0.823, 'Concentration': 60.0}
 
 
-def test_unique_rows_with_two_signal_return_unique_elements():
+def test_drop_duplicates_with_compare_rows_ignores_time_and_return_unique_elements_2():
     generator = make_generator(source=input_src_2_signal)
-    urows = drop_duplicates(source=discard_time(generator))
+    urows = drop_duplicates(source=generator, predicate=isequal)
 
-    assert next(urows) == {'Concentration': 80.0, 'Supply Voltage': 15.0}
-    assert next(urows) == {'Concentration': 80.0, 'Supply Voltage': 12.0}
-    assert next(urows) == {'Concentration': 70.0, 'Supply Voltage': 12.0}
-    assert next(urows) == {'Concentration': 80.0, 'Supply Voltage': 15.0}
-    assert next(urows) == {'Concentration': 90.0, 'Supply Voltage': 18.0}
-    assert next(urows) == {'Concentration': 60.0, 'Supply Voltage': 12.0}
+    assert next(urows) == {'time': 0.123, 'Concentration': 80.0, 'Supply Voltage': 15.0}
+    assert next(urows) == {'time': 0.153, 'Concentration': 80.0, 'Supply Voltage': 12.0}
+    assert next(urows) == {'time': 0.223, 'Concentration': 70.0, 'Supply Voltage': 12.0}
+    assert next(urows) == {'time': 0.363, 'Concentration': 80.0, 'Supply Voltage': 15.0}
+    assert next(urows) == {'time': 0.523, 'Concentration': 90.0, 'Supply Voltage': 18.0}
+    assert next(urows) == {'time': 0.823, 'Concentration': 60.0, 'Supply Voltage': 12.0}
 
-#     assert urows[0] == {'time': 0.123, 'Concentration': 80.0, 'Supply Voltage': 15.0}
-#     assert urows[1] == {'time': 0.153, 'Concentration': 80.0, 'Supply Voltage': 12.0}
-#     assert urows[2] == {'time': 0.223, 'Concentration': 70.0, 'Supply Voltage': 12.0}
-#     assert urows[2] == {'time': 0.363, 'Concentration': 80.0}
-#     assert urows[3] == {'time': 0.523, 'Concentration': 90.0}
-#     assert urows[4] == {'time': 0.823, 'Concentration': 60.0}
 
-def test_rows_are_different():
+def test_compare_rows_are_different():
     row1 = {'time': 0.123, 'Concentration': 80.0, 'Supply Voltage': 15.0}
     row2 = {'time': 0.153, 'Concentration': 80.0, 'Supply Voltage': 12.0}
+    assert not isequal(row1, row2)
 
-    assert not compare_rows(row1, row2)
 
-
-def test_rows_are_equal():
+def test_compare_rows_are_equal():
     row1 = {'time': 0.153, 'Concentration': 80.0, 'Supply Voltage': 12.0}
     row2 = {'time': 0.183, 'Concentration': 80.0, 'Supply Voltage': 12.0}
+    assert isequal(row1, row2)
 
-    assert compare_rows(row1, row2)
 
-
-def test_rows_are_equal_2():
+def test_compare_rows_are_equal_2():
     row1 = {'time': 0.153, 'Percentage': 80.0, 'Supply Voltage': 12.0}
     row2 = {'time': 0.183, 'Percentage': 80.0, 'Supply Voltage': 12.0}
+    assert isequal(row1, row2)
 
-    assert compare_rows(row1, row2)
+
+def test_compare_rows_are_equal_empty_dict():
+    row1 = {}
+    row2 = {}
+    assert isequal(row1, row2)
 
 
-def test_values_are_different():
+def test_compare_rows_are_equal_with_equal_time():
+    row1 = {'time': 0.153, 'Percentage': 80.0, 'Supply Voltage': 12.0}
+    row2 = {'time': 0.153, 'Percentage': 80.0, 'Supply Voltage': 12.0}
+    assert isequal(row1, row2)
+
+
+def test_compare_rows_are_equal_with_no_time():
+    row1 = {'Percentage': 80.0, 'Supply Voltage': 12.0}
+    row2 = {'Percentage': 80.0, 'Supply Voltage': 12.0}
+    assert isequal(row1, row2)
+
+
+def test_compare_values_are_different():
     value1 = (2, 3)
-    value2 = (4,4)
+    value2 = (4, 4)
+    assert not compare_values(value1, value2)
 
-    assert compare_x_values(value1, value2) == False
 
-
-def test_values_are_equal():
+def test_compare_values_are_equal():
     value1 = (2, 3)
-    value2 = (2,4)
+    value2 = (2, 4)
+    assert compare_values(value1, value2)
 
-    assert compare_x_values(value1, value2) == True
+def test_empty_dicts_are_equal():
+    row1 = {}
+    row2 = {}
+    assert isequal(row1, row2)
+
+
+def test_non_empty_dict_unequal_to_empty_dict():
+    row1 = {'a': 1}
+    row2 = {}
+    assert not isequal(row1, row2)
+
+
+def test_non_empty_dict_unequal_to_empty_dict_1():
+    row1 = {}
+    row2 = {'a': 1}
+    assert not isequal(row1, row2)
+
+
+def test_non_empty_dict_unequal_to_empty_dict_2():
+    row1 = {'a': 1}
+    row2 = {'a': 1}
+    assert isequal(row1, row2)

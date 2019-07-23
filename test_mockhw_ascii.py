@@ -1,42 +1,52 @@
-import csv
 import io
 import pytest
 
 from mockhw_ascii import *
+from unique_row import drop_duplicates, isequal
 
-sig_in_1st = SignalDefinition(name="prs_rag", minimum='-40.15', maximum='130.10', unit='C',
-                              physical=Physical(x1=-40.15, x2=130.10, y1=264, y2=1626, bitwidth=12),
-                              encoding=SignalEncoding(bitwidth=12, msn=1, lsn=3),
-                              default=-21.671875)
+sig_in_1st = SignalDefinition(name="Concentration", minimum='-10', maximum='100', unit='%',
+                              physical=spec_conti(minimum=-10, maximum=100,
+                                                  resolution=0.01, bitwidth=16, errorcodes={}, offset=-10),
+                              encoding=SignalEncoding(bitwidth=16, msn=1, lsn=4),
+                              default=25.46)
 
-sig_in_2nd = SignalDefinition(name="state_com_sens_sent[UREA_PRS]",  minimum='-40.15', maximum='130.10', unit='C',
-                              physical=Physical(x1=-40.15, x2=130.10, y1=264, y2=1626, bitwidth=12),
-                              encoding=SignalEncoding(bitwidth=12, msn=6, lsn=4),
-                              default=-21.671875)
+sig_in_1st_as_2nd_signal = SignalDefinition(name="Concentration", minimum='-10', maximum='100', unit='%',
+                                            physical=spec_conti(minimum=-10, maximum=100,
+                                                                resolution=0.01, bitwidth=16, errorcodes={}, offset=-10),
+                                            encoding=SignalEncoding(bitwidth=16, msn=6, lsn=3),
+                                            default=25.46)
 
-sig_in_3rd = SignalDefinition(name="prs_rag_sent", minimum='-16', maximum='2', unit='kPa',
-                              physical=Physical(x1=-16, x2=2, y1=193, y2=3896, bitwidth=12),
-                              encoding=SignalEncoding(bitwidth=12, msn=1, lsn=3),
-                              default=-16.938)
+sig_in_2nd = SignalDefinition(name="Supply Voltage", minimum='0', maximum='40.75', unit='V',
+                              physical=spec_conti(minimum=0, maximum=40.75,
+                                                  resolution=0.16, bitwidth=8, errorcodes={}, offset=0),
+                              encoding=SignalEncoding(bitwidth=8, msn=1, lsn=2),
+                              default=5.671875)
 
-sig_in_4th = SignalDefinition(name="t_dly_diag_inh_sens_sent", minimum='-40.15', maximum='130.10', unit='C',
-                              physical=Physical(x1=-40.15, x2=130.10, y1=264, y2=1626, bitwidth=12),
-                              encoding=SignalEncoding(bitwidth=12, msn=6, lsn=4),
-                              default=-21.671875)
+sig_in_3rd = SignalDefinition(name="Runtime 1", minimum='0', maximum='1023', unit='V',
+                              physical=spec_conti(minimum=0, maximum=1023,
+                                                  resolution=0.015625, bitwidth=16, errorcodes={}, offset=0),
+                              encoding=SignalEncoding(bitwidth=16, msn=1, lsn=4),
+                              default=15.671875)
+
+sig_in_3rd_as_2nd_signal = SignalDefinition(name="Runtime 1", minimum='0', maximum='1023', unit='V',
+                                            physical=spec_conti(minimum=0, maximum=1023,
+                                                                resolution=0.015625, bitwidth=16, errorcodes={}, offset=0),
+                                            encoding=SignalEncoding(bitwidth=16, msn=6, lsn=3),
+                                            default=15.671875)
 
 
 @pytest.fixture()
 def processed_ascii():
     ascii2csv_file_content =io.StringIO("""\
-time,prs_rag,prs_rag_sent,state_com_sens_sent[UREA_PRS],t_dly_diag_inh_sens_sent
-9.841098354638689e-002,-0.13671875,-0.1337890625,8.0,24.43
-0.1085597930283484,-0.140625,-0.1474609375,8.0,24.44
-0.1182596551076358,-0.13671875,-0.130859375,0.0,24.45
-0.129234367556478,-0.140625,-0.1474609375,4.0,24.46
-0.1383462984846346,-0.1435546875,-0.1474609375,4.0,24.47
-0.1493690051530621,-0.14453125,-0.14453125,12.0,24.48
-0.1592528453799105,-0.142578125,-0.140625,8.0,24.49
-0.1685217577020239,-0.1416015625,-0.140625,12.0,24.50""")
+time,Concentration,Supply Voltage,Runtime 1,
+0.0998410,55.0,12.0,8.0
+0.1085597,55.0,12.0,8.0
+0.1182596,75.0,12.0,13.0
+0.1292343,65.0,15.0,23.0
+0.1383462,65.0,15.0,8.0
+0.1493690,65.0,12.0,5.0
+0.1592528,85.0,14.0,8.0
+0.1685217,85.0,12.0,8.0""")
 
     csv_row = csv.DictReader(ascii2csv_file_content)
     return csv_row
@@ -50,82 +60,163 @@ def test_translate_headers_ascii_to_sent():
 
 
 def test_signal_row_generator_with_time_and_one_signal_1(processed_ascii):
-    signal_row = signal_row_generator(source=processed_ascii, signal1=sig_in_1st)
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_1st)
 
-    assert next(signal_row) == {'time': '9.841098354638689e-002', 'prs_rag': '-0.13671875'}
-    assert next(signal_row) == {'time': '0.1085597930283484', 'prs_rag': '-0.140625'}
+    assert next(signal_rows) == {'time': '0.0998410', 'Concentration': '55.0'}
+    assert next(signal_rows) == {'time': '0.1085597', 'Concentration': '55.0'}
+    assert next(signal_rows) == {'time': '0.1182596', 'Concentration': '75.0'}
+    assert next(signal_rows) == {'time': '0.1292343', 'Concentration': '65.0'}
+
+
+def test_drop_duplicates_drops_same_prev_val_one_signal_1(processed_ascii):
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_1st)
+    unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
+
+    assert next(unique_rows) == {'time': '0.0998410', 'Concentration': '55.0'}
+    assert next(unique_rows) == {'time': '0.1182596', 'Concentration': '75.0'}
+    assert next(unique_rows) == {'time': '0.1292343', 'Concentration': '65.0'}
+    assert next(unique_rows) == {'time': '0.1592528', 'Concentration': '85.0'}
 
 
 def test_signal_row_generator_with_time_and_one_signal_2(processed_ascii):
-    signal_row = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd)
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd)
 
-    assert next(signal_row) == {'time': '9.841098354638689e-002', 'state_com_sens_sent[UREA_PRS]': '8.0'}
-    assert next(signal_row) == {'time': '0.1085597930283484', 'state_com_sens_sent[UREA_PRS]': '8.0'}
+    assert next(signal_rows) == {'time': '0.0998410', 'Supply Voltage': '12.0'}
+    assert next(signal_rows) == {'time': '0.1085597', 'Supply Voltage': '12.0'}
+    assert next(signal_rows) == {'time': '0.1182596', 'Supply Voltage': '12.0'}
+    assert next(signal_rows) == {'time': '0.1292343', 'Supply Voltage': '15.0'}
+
+
+def test_drop_duplicates_drops_same_prev_val_one_signal_2(processed_ascii):
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd)
+    unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
+
+    assert next(unique_rows) == {'time': '0.0998410', 'Supply Voltage': '12.0'}
+    assert next(unique_rows) == {'time': '0.1292343', 'Supply Voltage': '15.0'}
+    assert next(unique_rows) == {'time': '0.1493690', 'Supply Voltage': '12.0'}
+    assert next(unique_rows) == {'time': '0.1592528', 'Supply Voltage': '14.0'}
 
 
 def test_signal_row_generator_with_time_and_one_signal_3(processed_ascii):
-    signal_row = signal_row_generator(source=processed_ascii, signal1=sig_in_3rd)
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_3rd)
 
-    assert next(signal_row) == {'time': '9.841098354638689e-002', 'prs_rag_sent': '-0.1337890625'}
-    assert next(signal_row) == {'time': '0.1085597930283484', 'prs_rag_sent': '-0.1474609375'}
+    assert next(signal_rows) == {'time': '0.0998410', 'Runtime 1': '8.0'}
+    assert next(signal_rows) == {'time': '0.1085597', 'Runtime 1': '8.0'}
+    assert next(signal_rows) == {'time': '0.1182596', 'Runtime 1': '13.0'}
+    assert next(signal_rows) == {'time': '0.1292343', 'Runtime 1': '23.0'}
+
+
+def test_drop_duplicates_drops_same_prev_val_one_signal_3(processed_ascii):
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_3rd)
+    unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
+
+    assert next(unique_rows) == {'time': '0.0998410', 'Runtime 1': '8.0'}
+    assert next(unique_rows) == {'time': '0.1182596', 'Runtime 1': '13.0'}
+    assert next(unique_rows) == {'time': '0.1292343', 'Runtime 1': '23.0'}
+    assert next(unique_rows) == {'time': '0.1383462', 'Runtime 1': '8.0'}
 
 
 def test_signal_row_generator_with_time_and_two_signal_1(processed_ascii):
-    signal_row = signal_row_generator(source=processed_ascii, signal1=sig_in_1st, signal2=sig_in_3rd)
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd, signal2=sig_in_3rd)
 
-    assert next(signal_row) == {'time': '9.841098354638689e-002',
-                                'prs_rag': '-0.13671875', 'prs_rag_sent': '-0.1337890625'}
-    assert next(signal_row) == {'time': '0.1085597930283484',
-                                'prs_rag': '-0.140625', 'prs_rag_sent': '-0.1474609375'}
+    assert next(signal_rows) == {'time': '0.0998410', 'Supply Voltage': '12.0', 'Runtime 1': '8.0'}
+    assert next(signal_rows) == {'time': '0.1085597', 'Supply Voltage': '12.0', 'Runtime 1': '8.0'}
+    assert next(signal_rows) == {'time': '0.1182596', 'Supply Voltage': '12.0', 'Runtime 1': '13.0'}
+    assert next(signal_rows) == {'time': '0.1292343', 'Supply Voltage': '15.0', 'Runtime 1': '23.0'}
+
+
+def test_drop_duplicates_drops_same_prev_val_two_signal_1(processed_ascii):
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd, signal2=sig_in_3rd)
+    unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
+
+    assert next(unique_rows) == {'time': '0.0998410', 'Supply Voltage': '12.0', 'Runtime 1': '8.0'}
+    assert next(unique_rows) == {'time': '0.1182596', 'Supply Voltage': '12.0', 'Runtime 1': '13.0'}
+    assert next(unique_rows) == {'time': '0.1292343', 'Supply Voltage': '15.0', 'Runtime 1': '23.0'}
+    assert next(unique_rows) == {'time': '0.1383462', 'Supply Voltage': '15.0', 'Runtime 1': '8.0'}
 
 
 def test_signal_row_generator_with_time_and_two_signal_2(processed_ascii):
-    signal_row = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd, signal2=sig_in_4th)
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd, signal2=sig_in_1st)
 
-    assert next(signal_row) == {'time': '9.841098354638689e-002',
-                                'state_com_sens_sent[UREA_PRS]': '8.0', 't_dly_diag_inh_sens_sent': '24.43'}
-    assert next(signal_row) == {'time': '0.1085597930283484',
-                                'state_com_sens_sent[UREA_PRS]': '8.0', 't_dly_diag_inh_sens_sent': '24.44'}
+    assert next(signal_rows) == {'time': '0.0998410', 'Supply Voltage': '12.0', 'Concentration': '55.0'}
+    assert next(signal_rows) == {'time': '0.1085597', 'Supply Voltage': '12.0', 'Concentration': '55.0'}
+    assert next(signal_rows) == {'time': '0.1182596', 'Supply Voltage': '12.0', 'Concentration': '75.0'}
+    assert next(signal_rows) == {'time': '0.1292343', 'Supply Voltage': '15.0', 'Concentration': '65.0'}
 
 
-def test_signal_frame_generator_with_time_and_one_signal_1(processed_ascii):
+def test_drop_duplicates_drops_same_prev_val_two_signal_2(processed_ascii):
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd, signal2=sig_in_1st)
+    unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
+
+    assert next(unique_rows) == {'time': '0.0998410', 'Supply Voltage': '12.0', 'Concentration': '55.0'}
+    assert next(unique_rows) == {'time': '0.1182596', 'Supply Voltage': '12.0', 'Concentration': '75.0'}
+    assert next(unique_rows) == {'time': '0.1292343', 'Supply Voltage': '15.0', 'Concentration': '65.0'}
+    assert next(unique_rows) == {'time': '0.1493690', 'Supply Voltage': '12.0', 'Concentration': '65.0'}
+
+
+def test_signal_frame_generator_generates_timestamps_in_integer(processed_ascii):
     signal_frames = signal_frame_generator(source=processed_ascii, signal1=sig_in_1st)
 
-    assert next(signal_frames) == (38441, [0, 2, 4, 8, 0, 0, 0, 0])
-    assert next(signal_frames) == (42406, [0, 2, 4, 8, 0, 0, 0, 0])
-    assert next(signal_frames) == (46195, [0, 2, 4, 8, 0, 0, 0, 0])
-    assert next(signal_frames) == (50482, [0, 2, 4, 8, 0, 0, 0, 0])
-    assert next(signal_frames) == (54041, [0, 2, 4, 8, 0, 0, 0, 0])
+    assert next(signal_frames)[0] == 39000
+    assert next(signal_frames)[0] == 42406
+    assert next(signal_frames)[0] == 46195
+    assert next(signal_frames)[0] == 50482
+    assert next(signal_frames)[0] == 54041
+    assert next(signal_frames)[0] == 58347
 
 
-def test_signal_frame_generator_with_time_and_one_signal_2(processed_ascii):
-    signal_frames = signal_frame_generator(source=processed_ascii, signal1=sig_in_3rd)
+def test_signal_frame_generator_generates_unique_frame_one_signal_1(processed_ascii):
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_1st)
+    unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
+    signal_frames = signal_frame_generator(source=unique_rows, signal1=sig_in_1st)
 
-    assert next(signal_frames) == (38441, [0, 13, 8, 1, 0, 0, 0, 0])
-    assert next(signal_frames) == (42406, [0, 13, 7, 14, 0, 0, 0, 0])
-    assert next(signal_frames) == (46195, [0, 13, 8, 2, 0, 0, 0, 0])
-    assert next(signal_frames) == (50482, [0, 13, 7, 14, 0, 0, 0, 0])
-    assert next(signal_frames) == (54041, [0, 13, 7, 14, 0, 0, 0, 0])
-    assert next(signal_frames) == (58347, [0, 13, 7, 15, 0, 0, 0, 0])
-
-
-def test_signal_frame_generator_with_time_and_two_signal_1(processed_ascii):
-    signal_frames = signal_frame_generator(source=processed_ascii, signal1=sig_in_1st, signal2=sig_in_2nd)
-
-    assert next(signal_frames) == (38441, [0, 2, 4, 8, 9, 8, 2, 0])
-    assert next(signal_frames) == (42406, [0, 2, 4, 8, 9, 8, 2, 0])
-    assert next(signal_frames) == (46195, [0, 2, 4, 8, 9, 4, 2, 0])
-    assert next(signal_frames) == (50482, [0, 2, 4, 8, 9, 6, 2, 0])
-    assert next(signal_frames) == (54041, [0, 2, 4, 8, 9, 6, 2, 0])
-    assert next(signal_frames) == (58347, [0, 2, 4, 8, 9, 10, 2, 0])
+    assert next(signal_frames)[1] == [0, 1, 9, 6, 4, 0, 0, 0]
+    assert next(signal_frames)[1] == [0, 2, 1, 3, 4, 0, 0, 0]
+    assert next(signal_frames)[1] == [0, 1, 13, 4, 12, 0, 0, 0]
+    assert next(signal_frames)[1] == [0, 2, 5, 1, 12, 0, 0, 0]
 
 
-def test_signal_frame_generator_with_time_and_two_signal_2(processed_ascii):
-    signal_frames = signal_frame_generator(source=processed_ascii, signal1=sig_in_3rd, signal2=sig_in_4th)
+def test_signal_frame_generator_generates_unique_frame_one_signal_2(processed_ascii):
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd)
+    unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
+    signal_frames = signal_frame_generator(source=unique_rows, signal1=sig_in_2nd)
 
-    assert next(signal_frames) == (38441, [0, 13, 8, 1, 13, 0, 3, 0])
-    assert next(signal_frames) == (42406, [0, 13, 7, 14, 13, 0, 3, 0])
-    assert next(signal_frames) == (46195, [0, 13, 8, 2, 13, 0, 3, 0])
-    assert next(signal_frames) == (50482, [0, 2, 4, 8, 9, 6, 2, 0])
-    assert next(signal_frames) == (54041, [0, 2, 4, 8, 9, 6, 2, 0])
-    assert next(signal_frames) == (58347, [0, 2, 4, 8, 9, 10, 2, 0])
+    assert next(signal_frames)[1] == [0, 4, 11, 0, 0, 0, 0, 0]
+    assert next(signal_frames)[1] == [0, 5, 14, 0, 0, 0, 0, 0]
+    assert next(signal_frames)[1] == [0, 4, 11, 0, 0, 0, 0, 0]
+    assert next(signal_frames)[1] == [0, 5, 8, 0, 0, 0, 0, 0]
+
+
+def test_signal_frame_generator_generates_unique_frame_one_signal_3(processed_ascii):
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_3rd)
+    unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
+    signal_frames = signal_frame_generator(source=unique_rows, signal1=sig_in_3rd)
+
+    assert next(signal_frames)[1] == [0, 0, 2, 0, 0, 0, 0, 0]
+    assert next(signal_frames)[1] == [0, 0, 3, 4, 0, 0, 0, 0]
+    assert next(signal_frames)[1] == [0, 0, 5, 12, 0, 0, 0, 0]
+    assert next(signal_frames)[1] == [0, 0, 2, 0, 0, 0, 0, 0]
+
+
+def test_signal_frame_generator_generates_unique_frame_with_time_and_two_signal_1(processed_ascii):
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd, signal2=sig_in_1st_as_2nd_signal)
+    unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
+    signal_frames = signal_frame_generator(source=unique_rows, signal1=sig_in_2nd, signal2=sig_in_1st_as_2nd_signal)
+
+    assert next(signal_frames) == (39000, [0, 4, 11, 4, 6, 9, 1, 0])
+    assert next(signal_frames) == (46195, [0, 4, 11, 4, 3, 1, 2, 0])
+    assert next(signal_frames) == (50482, [0, 5, 14, 12, 4, 13, 1, 0])
+    assert next(signal_frames) == (58347, [0, 4, 11, 12, 4, 13, 1, 0])
+    assert next(signal_frames) == (62208, [0, 5, 8, 12, 1, 5, 2, 0])
+
+
+def test_signal_frame_generator_generates_unique_frame_with_time_and_two_signal_2(processed_ascii):
+    signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd, signal2=sig_in_3rd_as_2nd_signal)
+    unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
+    signal_frames = signal_frame_generator(source=unique_rows, signal1=sig_in_2nd, signal2=sig_in_3rd_as_2nd_signal)
+
+    assert next(signal_frames) == (39000, [0, 4, 11, 0, 0, 2, 0, 0])
+    assert next(signal_frames) == (46195, [0, 4, 11, 0, 4, 3, 0, 0])
+    assert next(signal_frames) == (50482, [0, 5, 14, 0, 12, 5, 0, 0])
+    assert next(signal_frames) == (54041, [0, 5, 14, 0, 0, 2, 0, 0])
+    assert next(signal_frames) == (58347, [0, 4, 11, 0, 4, 1, 0, 0])

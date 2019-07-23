@@ -1,30 +1,7 @@
 import operator
 
 
-def unique_rows(source, signal1, signal2=None):
-    lst = []
-    prev_row = next(source)
-    prev_val = (prev_row[signal1.name], None)
-
-    if signal2:
-        prev_val = (prev_row[signal1.name], prev_row[signal2.name])
-
-    lst.append(prev_row)
-
-    for r in source:
-        if r[signal1.name] != prev_val[0]:
-            prev_val = (r[signal1.name], None)
-            if signal2:
-                if ((r[signal1.name] != prev_val[0] and r[signal2.name] != prev_val[1]) or
-                        (r[signal1.name] == prev_val[0] and r[signal2.name] != prev_val[1]) or
-                        (r[signal1.name] != prev_val[0] and r[signal2.name] == prev_val[1])):
-                    prev_val = (r[signal1.name], r[signal2.name])
-            lst.append(r)
-
-    return lst
-
-
-def drop_duplicates_1(source):
+def basic_stream_signature(source):
     for elem in source:
         yield elem
 
@@ -39,48 +16,22 @@ def drop_duplicates(source, predicate=operator.__eq__):
         yield elem
 
 
-def compare_rows(row1, row2):
-    if row1['time'] != row2['time']:
-        row_no_time1 = {k: v for k, v in row1.items() if k != 'time'}
-        row_no_time2 = {k: v for k, v in row2.items() if k != 'time'}
+def isequal_1(row1, row2):
+    row_no_time1 = {k: v for k, v in row1.items() if k != 'time'}
+    row_no_time2 = {k: v for k, v in row2.items() if k != 'time'}
+    return row_no_time1 == row_no_time2
 
-        if operator.__eq__(row_no_time1, row_no_time2):
+
+def isequal(row1, row2):
+    # if row1:
+    #     return False
+    # if row2:
+    #     return False
+    for k in row1:
+        print(k)
+        if row1[k] == row2[k]:
             return True
-        else:
-            return False
+    return True
 
-
-def compare_x_values(value1, value2):
-    if value1[0] == value2[0]:
-        return True
-    else:
-        return False
-
-
-
-class UniqueRows:
-    def __init__(self, source, signal1):
-        self.source = source
-        self.signal1 = signal1
-        self.prev_value = None
-        self.storage = []
-        self.store_unique_rows()
-
-    def store_unique_rows(self):
-        if self.prev_value is None:
-            try:
-                start_row = next(self.source)
-                self.prev_value = start_row[self.signal1.name]
-                self.storage.append(start_row)
-            except StopIteration:
-                return
-
-        for row in self.source:
-            if row[self.signal1.name]!= self.prev_value:
-                self.prev_value = row[self.signal1.name]
-                self.storage.append(row)
-
-    def generate_unique_rows(self):
-        for elem in self.storage:
-            yield elem
-
+def compare_values(value1, value2):
+    return value1[0] == value2[0]
