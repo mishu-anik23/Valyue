@@ -72,10 +72,11 @@ def test_drop_duplicates_drops_same_prev_val_one_signal_1(processed_ascii):
     signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_1st)
     unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
 
-    assert next(unique_rows) == {'time': '0.0998410', 'Concentration': '55.0'}
-    assert next(unique_rows) == {'time': '0.1182596', 'Concentration': '75.0'}
-    assert next(unique_rows) == {'time': '0.1292343', 'Concentration': '65.0'}
-    assert next(unique_rows) == {'time': '0.1592528', 'Concentration': '85.0'}
+    assert list(unique_rows) == [{'time': '0.0998410', 'Concentration': '55.0'},
+                                 {'time': '0.1182596', 'Concentration': '75.0'},
+                                 {'time': '0.1292343', 'Concentration': '65.0'},
+                                 {'time': '0.1592528', 'Concentration': '85.0'}]
+
 
 
 def test_signal_row_generator_with_time_and_one_signal_2(processed_ascii):
@@ -91,10 +92,11 @@ def test_drop_duplicates_drops_same_prev_val_one_signal_2(processed_ascii):
     signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd)
     unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
 
-    assert next(unique_rows) == {'time': '0.0998410', 'Supply Voltage': '12.0'}
-    assert next(unique_rows) == {'time': '0.1292343', 'Supply Voltage': '15.0'}
-    assert next(unique_rows) == {'time': '0.1493690', 'Supply Voltage': '12.0'}
-    assert next(unique_rows) == {'time': '0.1592528', 'Supply Voltage': '14.0'}
+    assert list(unique_rows) == [{'time': '0.0998410', 'Supply Voltage': '12.0'},
+                                 {'time': '0.1292343', 'Supply Voltage': '15.0'},
+                                 {'time': '0.1493690', 'Supply Voltage': '12.0'},
+                                 {'time': '0.1592528', 'Supply Voltage': '14.0'},
+                                 {'time': '0.1685217', 'Supply Voltage': '12.0'}]
 
 
 def test_signal_row_generator_with_time_and_one_signal_3(processed_ascii):
@@ -110,10 +112,12 @@ def test_drop_duplicates_drops_same_prev_val_one_signal_3(processed_ascii):
     signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_3rd)
     unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
 
-    assert next(unique_rows) == {'time': '0.0998410', 'Runtime 1': '8.0'}
-    assert next(unique_rows) == {'time': '0.1182596', 'Runtime 1': '13.0'}
-    assert next(unique_rows) == {'time': '0.1292343', 'Runtime 1': '23.0'}
-    assert next(unique_rows) == {'time': '0.1383462', 'Runtime 1': '8.0'}
+    assert list(unique_rows) == [{'time': '0.0998410', 'Runtime 1': '8.0'},
+                                 {'time': '0.1182596', 'Runtime 1': '13.0'},
+                                 {'time': '0.1292343', 'Runtime 1': '23.0'},
+                                 {'time': '0.1383462', 'Runtime 1': '8.0'},
+                                 {'time': '0.1493690', 'Runtime 1': '5.0'},
+                                 {'time': '0.1592528', 'Runtime 1': '8.0'}]
 
 
 def test_signal_row_generator_with_time_and_two_signal_1(processed_ascii):
@@ -129,10 +133,13 @@ def test_drop_duplicates_drops_same_prev_val_two_signal_1(processed_ascii):
     signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd, signal2=sig_in_3rd)
     unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
 
-    assert next(unique_rows) == {'time': '0.0998410', 'Supply Voltage': '12.0', 'Runtime 1': '8.0'}
-    assert next(unique_rows) == {'time': '0.1182596', 'Supply Voltage': '12.0', 'Runtime 1': '13.0'}
-    assert next(unique_rows) == {'time': '0.1292343', 'Supply Voltage': '15.0', 'Runtime 1': '23.0'}
-    assert next(unique_rows) == {'time': '0.1383462', 'Supply Voltage': '15.0', 'Runtime 1': '8.0'}
+    assert list(unique_rows) == [{'time': '0.0998410', 'Supply Voltage': '12.0', 'Runtime 1': '8.0'},
+                                 {'time': '0.1182596', 'Supply Voltage': '12.0', 'Runtime 1': '13.0'},
+                                 {'time': '0.1292343', 'Supply Voltage': '15.0', 'Runtime 1': '23.0'},
+                                 {'time': '0.1383462', 'Supply Voltage': '15.0', 'Runtime 1': '8.0'},
+                                 {'time': '0.1493690', 'Supply Voltage': '12.0', 'Runtime 1': '5.0'},
+                                 {'time': '0.1592528', 'Supply Voltage': '14.0', 'Runtime 1': '8.0'},
+                                 {'time': '0.1685217', 'Supply Voltage': '12.0', 'Runtime 1': '8.0'}]
 
 
 def test_signal_row_generator_with_time_and_two_signal_2(processed_ascii):
@@ -148,10 +155,12 @@ def test_drop_duplicates_drops_same_prev_val_two_signal_2(processed_ascii):
     signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd, signal2=sig_in_1st)
     unique_rows = drop_duplicates(source=signal_rows, predicate=isequal)
 
-    assert next(unique_rows) == {'time': '0.0998410', 'Supply Voltage': '12.0', 'Concentration': '55.0'}
-    assert next(unique_rows) == {'time': '0.1182596', 'Supply Voltage': '12.0', 'Concentration': '75.0'}
-    assert next(unique_rows) == {'time': '0.1292343', 'Supply Voltage': '15.0', 'Concentration': '65.0'}
-    assert next(unique_rows) == {'time': '0.1493690', 'Supply Voltage': '12.0', 'Concentration': '65.0'}
+    assert list(unique_rows) == [{'time': '0.0998410', 'Supply Voltage': '12.0', 'Concentration': '55.0'},
+                                 {'time': '0.1182596', 'Supply Voltage': '12.0', 'Concentration': '75.0'},
+                                 {'time': '0.1292343', 'Supply Voltage': '15.0', 'Concentration': '65.0'},
+                                 {'time': '0.1493690', 'Supply Voltage': '12.0', 'Concentration': '65.0'},
+                                 {'time': '0.1592528', 'Supply Voltage': '14.0', 'Concentration': '85.0'},
+                                 {'time': '0.1685217', 'Supply Voltage': '12.0', 'Concentration': '85.0'}]
 
 
 def test_signal_frame_generator_generates_timestamps_in_integer(processed_ascii):

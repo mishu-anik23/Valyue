@@ -23,15 +23,15 @@ def isequal_1(row1, row2):
 
 
 def isequal(row1, row2):
-    # if row1:
-    #     return False
-    # if row2:
-    #     return False
-    for k in row1:
-        print(k)
-        if row1[k] == row2[k]:
-            return True
+    if row1.keys() != row2.keys():
+        return False
+    for key in row1:
+        if key == 'time':
+            continue
+        if row1[key] != row2[key]:
+            return False
     return True
+
 
 def compare_values(value1, value2):
     return value1[0] == value2[0]
