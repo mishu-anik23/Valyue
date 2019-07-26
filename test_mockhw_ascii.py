@@ -78,7 +78,6 @@ def test_drop_duplicates_drops_same_prev_val_one_signal_1(processed_ascii):
                                  {'time': '0.1592528', 'Concentration': '85.0'}]
 
 
-
 def test_signal_row_generator_with_time_and_one_signal_2(processed_ascii):
     signal_rows = signal_row_generator(source=processed_ascii, signal1=sig_in_2nd)
 

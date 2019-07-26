@@ -1,5 +1,6 @@
 from unique_row import isequal
 
+
 def test_empty_dicts_are_equal():
     row1 = {}
     row2 = {}

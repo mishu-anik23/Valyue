@@ -60,12 +60,20 @@ def row_generator(source, headers):
         yield dict(zip(headers, row))
 
 
-def signal_row_generator(source, signal1, signal2=None):
+def signal_row_generator_1(source, signal1, signal2=None):
     headings = ['time', signal1.name]
     if signal2:
         headings = ['time', signal1.name, signal2.name]
     for row in source:
         yield {k: v for k, v in row.items() if k in headings}
+
+
+def signal_row_generator(source, signal1, signal2=None):
+    headings = ['time', signal1.name]
+    if signal2:
+        headings = ['time', signal1.name, signal2.name]
+    for row in source:
+        yield {heading: row[heading] for heading in headings}
 
 
 def signal_frame_generator(source, signal1, signal2=None):
@@ -95,7 +103,6 @@ def scale_sent_timestamp(time):
 
 
 def make_sent_row(ts, frame):
-    # rowdct_sent = {}
     rowdct_sent = insert_nibbles(frame)
     rowdct_sent['Bus'] = 0
     rowdct_sent['Typ'] = 0
@@ -103,7 +110,6 @@ def make_sent_row(ts, frame):
     rowdct_sent['Rx Time'] = ts
 
     return rowdct_sent
-
 
 
 def comma2decimal(source):
@@ -115,7 +121,6 @@ def comma2decimal(source):
 def insert_nibbles(frame):
     nibbles = ['N0', 'N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'CRC']
     return dict(zip(nibbles, frame))
-
 
 
 def extract_nibbles(row):
