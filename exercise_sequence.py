@@ -12,7 +12,7 @@ def mult_add_sequences(source):
             j_1 = idx - 1
             j_2 = idx - 2
 
-        if j_1:
+        if j_2 >= 0:
             if source[j_2] == 0:
                 out_list.append(source[j] + source[j_1])
             else:
