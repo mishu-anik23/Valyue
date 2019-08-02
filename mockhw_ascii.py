@@ -128,7 +128,6 @@ def extract_nibbles(row):
     return [int(row[nibble]) for nibble in nibbles]
 
 
-
 class MockHw:
     def __init__(self, source):
         self.source = source

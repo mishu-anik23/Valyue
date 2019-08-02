@@ -24,31 +24,15 @@ def generate_mult_add_sequences(source):
     prev = None
     prev_prev = None
     for elm in source:
-        if prev_prev is None:
-            if prev is None:
-                prev = elm
-            prev_prev = prev
-        if prev_prev != prev:
-            if prev_prev == 0:
-                print("elm", elm)
-                print("prev", prev)
-                print("prev_prev", prev_prev)
-                yield elm + prev
+        if prev is not None:
+            if prev_prev != 0:
+                if prev_prev is not None:
+                    yield prev_prev * (elm + prev)
             else:
-                print("elm", elm)
-                print("prev", prev)
-                print("prev_prev", prev_prev)
-                yield prev_prev * (elm + prev)
-            prev_prev = prev
+                yield elm + prev
 
+        prev_prev = prev
         prev = elm
-
-
-
-
-
-
-
 
 
 def consecutive_diffs(in_list):
@@ -80,11 +64,17 @@ def consecutive_sums(in_list):
 
 def generate_consecutive_diff(source):
     previous_number = None
+    count = 0
     for number in source:
         if previous_number is not None:
             diff = number - previous_number
             yield diff
+
         previous_number = number
+        count += 1
+    # Oh, StopIteration! We're finished
+    if count == 1:
+        raise ValueError("At least need two elements to calculate consecutive diffs.")
 
 
 def generate_cumulative_sum_1(number_list):

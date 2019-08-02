@@ -35,6 +35,30 @@ def test_generate_mult_add_sequences_3():
     assert list(generator) == [-2 * (-1 + 0), -1 * (0 - 1), (-1 + 0), -1 * (0 + 1), (1 + 0)]
 
 
+def test_generate_mult_add_sequences_with_empty_list():
+    list_in = []
+    generator = generate_mult_add_sequences(list_in)
+    assert list(generator) == []
+
+
+def test_generate_mult_add_sequences_with_one_element():
+    list_in = [1]
+    generator = generate_mult_add_sequences(list_in)
+    assert list(generator) == []
+
+
+def test_generate_mult_add_sequences_with_two_element():
+    list_in = [1, 2]
+    generator = generate_mult_add_sequences(list_in)
+    assert list(generator) == []
+
+
+def test_generate_mult_add_sequences_same_element():
+    list_in = [1, 1, 1, 1]
+    generator = generate_mult_add_sequences(list_in)
+    assert list(generator) == [1 * (1 + 1), 1 * (1 + 1)]
+
+
 def test_get_consecutive_diffs_1():
     list_in = [1, 1, 2, 3, 5, 8, 13]
     assert consecutive_diffs(list_in) == [0, 1, 1, 2, 3, 5]
@@ -87,20 +111,33 @@ def test_generate_consecutive_diffs_3():
     assert list(diffs_generator) == [3, -6, 12, -24, 48, -96, 192]
 
 
+def test_generate_consecutive_diffs_with_same_element():
+    list_in = [1, 1, 1, 1, 1, 1]
+    diffs_generator = generate_consecutive_diff(list_in)
+    assert list(diffs_generator) == [0, 0, 0, 0, 0]
+
+
 def test_generate_consecutive_diffs_with_empty_list():
     list_in = []
     diffs_generator = generate_consecutive_diff(list_in)
     assert list(diffs_generator) == []
-
+    # with pytest.raises(ValueError) as exc:
+    #     list(diffs_generator)
+    #     assert 'need two elements' in str(exc)
 
 
 def test_generate_consecutive_diffs_with_one_element():
     list_in = [1]
     diffs_generator = generate_consecutive_diff(list_in)
+    #assert list(diffs_generator) == []
     with pytest.raises(ValueError) as exc:
         list(diffs_generator)
         assert 'need two elements' in str(exc)
 
+
+def test_consecutive_diffs_with_a_zero():
+    input = [0, 2, 1]
+    assert consecutive_diffs(input) == [2, -1]
 
 
 def test_consecutive_sums_1():
