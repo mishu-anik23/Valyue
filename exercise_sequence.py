@@ -12,12 +12,43 @@ def mult_add_sequences(source):
             j_1 = idx - 1
             j_2 = idx - 2
 
-        if j_2 >= 0:
+        if j_1:
             if source[j_2] == 0:
                 out_list.append(source[j] + source[j_1])
             else:
                 out_list.append(source[j_2] * (source[j] + source[j_1]))
     return out_list
+
+
+def generate_mult_add_sequences(source):
+    prev = None
+    prev_prev = None
+    for elm in source:
+        if prev_prev is None:
+            if prev is None:
+                prev = elm
+            prev_prev = prev
+        if prev_prev != prev:
+            if prev_prev == 0:
+                print("elm", elm)
+                print("prev", prev)
+                print("prev_prev", prev_prev)
+                yield elm + prev
+            else:
+                print("elm", elm)
+                print("prev", prev)
+                print("prev_prev", prev_prev)
+                yield prev_prev * (elm + prev)
+            prev_prev = prev
+
+        prev = elm
+
+
+
+
+
+
+
 
 
 def consecutive_diffs(in_list):

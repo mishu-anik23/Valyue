@@ -17,6 +17,24 @@ def test_mult_add_sequences_3():
     assert mult_add_sequences(list_in) == [-2 * (-1 + 0), -1 * (0 - 1), (-1 + 0), -1 * (0 + 1), (1 + 0)]
 
 
+def test_generate_mult_add_sequences_1():
+    list_in = [1, 2, 0, 5]
+    generator = generate_mult_add_sequences(list_in)
+    assert list(generator) == [1 * (2 + 0), 2 * (0 + 5)]
+
+
+def test_generate_mult_add_sequences_2():
+    list_in = [1, 2, 3, 5]
+    generator = generate_mult_add_sequences(list_in)
+    assert list(generator) == [1 * (2 + 3), 2 * (3 + 5)]
+
+
+def test_generate_mult_add_sequences_3():
+    list_in = [-2, -1, 0, -1, 0, 1, 0]
+    generator = generate_mult_add_sequences(list_in)
+    assert list(generator) == [-2 * (-1 + 0), -1 * (0 - 1), (-1 + 0), -1 * (0 + 1), (1 + 0)]
+
+
 def test_get_consecutive_diffs_1():
     list_in = [1, 1, 2, 3, 5, 8, 13]
     assert consecutive_diffs(list_in) == [0, 1, 1, 2, 3, 5]
