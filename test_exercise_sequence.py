@@ -17,6 +17,26 @@ def test_mult_add_sequences_3():
     assert mult_add_sequences(list_in) == [-2 * (-1 + 0), -1 * (0 - 1), (-1 + 0), -1 * (0 + 1), (1 + 0)]
 
 
+def test_mult_add_sequences_with_empty_list():
+    list_in = []
+    assert mult_add_sequences(list_in) == []
+
+
+def test_mult_add_sequences_with_one_element():
+    list_in = [1]
+    assert mult_add_sequences(list_in) == []
+
+
+def test_mult_add_sequences_with_two_element():
+    list_in = [1, 2]
+    assert mult_add_sequences(list_in) == []
+
+
+def test_mult_add_sequences_same_element():
+    list_in = [1, 1, 1, 1]
+    assert mult_add_sequences(list_in) == [1 * (1 + 1), 1 * (1 + 1)]
+
+
 def test_generate_mult_add_sequences_1():
     list_in = [1, 2, 0, 5]
     generator = generate_mult_add_sequences(list_in)

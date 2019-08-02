@@ -4,19 +4,18 @@
 
 def mult_add_sequences(source):
     out_list = []
-    j_1 = None
-    j_2 = None
-    for idx, elm in enumerate(source):
-        j = idx
-        if idx > 0:
-            j_1 = idx - 1
-            j_2 = idx - 2
-
-        if j_1:
-            if source[j_2] == 0:
-                out_list.append(source[j] + source[j_1])
+    prev = None
+    prev_prev = None
+    for elm in source:
+        if prev is not None:
+            if prev_prev != 0:
+                if prev_prev is not None:
+                    out_list.append((prev_prev * (elm + prev)))
             else:
-                out_list.append(source[j_2] * (source[j] + source[j_1]))
+                out_list.append(elm + prev)
+
+        prev_prev = prev
+        prev = elm
     return out_list
 
 
